@@ -1,0 +1,95 @@
+/* Landing -> login morph (the e-vite animation, desktop sizes). Replaces scroll.css.
+   State: one class on <html>. none = landing, .go = morphing/opened, .done = finished (1.8 s after .go).
+   Every visual change is a CSS transition keyed on those classes; entry.js only flips them and measures. */
+:root{--dur:1.2s;--ease:cubic-bezier(.7,0,.25,1);--dx:0px;--dy:0px;--s:.25;
+  /* arrow and its tab in the white margin */
+  --cue:54px;                              /* arrow box, 15% smaller than before (64 px) */
+  --th:clamp(30px,2.4vw,46px);             /* how far the white margin rises (its thickness) */
+  --tb:clamp(64px,4.6vw,88px);             /* tab width at the bottom */
+  --fx:clamp(48px,5.5vw,110px)}            /* length of each curve */
+/* Each side of the tab is ONE smooth S-curve (a single cubic Bezier): it leaves the margin flat, dips, and
+   lands flat on the bottom edge, so the tab flows out of the panel with no corners at all. */
+
+html.lock{overflow:hidden}
+html.instant *,html.instant *::before,html.instant *::after{transition:none!important}
+
+.entry{min-height:100vh;min-height:100dvh;padding:var(--m);display:flex;flex-direction:column;container-type:inline-size}
+
+/* ---- the one panel ---- */
+.slide{position:relative;flex:none;overflow:hidden;isolation:isolate;container-type:inline-size;
+  display:flex;align-items:center;justify-content:center;width:100%;
+  height:calc(100vh - 2*var(--m));height:calc(100dvh - 2*var(--m));border-radius:var(--r);
+  transition:height var(--dur) var(--ease),border-radius var(--dur) var(--ease)}
+.go .slide{height:min(20.31cqw,364px);border-radius:clamp(14px,1.15vw,22px)}   /* banner: 1/.2031 of the width */
+
+/* two gradient layers: .a (full screen) stays until .b (banner, mirrored) has faded in over it */
+.slide .aur{position:absolute;inset:0;width:auto;height:auto;z-index:0;border-radius:inherit}   /* round the layers too: Chrome may not clip blurred blobs to the panel corners */
+.aur.b{opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s linear .5s}
+.go .aur.b{opacity:1;visibility:visible;transition:opacity .65s ease .55s,visibility 0s linear .55s}
+.done .aur.a{visibility:hidden}
+html:not(.go) .aur.b .blob,.done .aur.a .blob,.slide:not(.vis) .blob{animation-play-state:paused}
+
+/* ---- glass icon: 10% smaller than before (540 x 450 at 1920), flies onto the wordmark's diamond ---- */
+.mark{position:relative;z-index:2;cursor:pointer;border-radius:24px;
+  width:min(540px,72%,calc((100dvh - 2*var(--m))*.654));aspect-ratio:600/500;transform-origin:50% 50%;
+  transition:transform var(--dur) var(--ease),opacity .35s ease}
+.mark::after{content:"";position:absolute;inset:-28px}                 /* generous hit area */
+.go .mark{transform:translate(var(--dx),var(--dy)) scale(var(--s));opacity:0;pointer-events:none;
+  transition:transform var(--dur) var(--ease),opacity .4s ease .9s}
+.done .mark{visibility:hidden}
+.mark .pulse,.mark .stage{width:100%;height:100%}
+.mark .pulse{animation:breathe 1.6s ease-in-out -.8s infinite alternate}
+@keyframes breathe{from{transform:scale(.95)}to{transform:scale(1.05)}}
+.done .mark .pulse,.done .mark .sway,.done .mark .sheen,.done .mark .glow{animation-play-state:paused}
+
+/* ---- flat wordmark: already in place, hidden; after the icon lands it fades in and unfolds to the left ---- */
+.word{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;
+  width:calc(min(77.4cqw,1387px)*1541/1500);aspect-ratio:1541/364;opacity:0;clip-path:inset(0 0 0 76%);
+  transition:opacity .35s ease .2s,clip-path .45s ease}
+.word img{display:block;width:100%;height:100%}
+.go .word{opacity:1;clip-path:inset(0);
+  transition:opacity .4s ease .9s,clip-path .75s cubic-bezier(.22,.8,.2,1) .95s}
+
+/* ---- white margin around the arrow (shoulders + rounded corners); slides away when the morph starts ---- */
+.notch{position:absolute;z-index:3;left:0;right:0;bottom:0;height:calc(var(--th) + var(--r));pointer-events:none;
+  transition:transform .5s ease .8s}
+.go .notch{transform:translateY(100%);transition:transform .4s ease}
+.notch i{position:absolute;display:block}
+.sh{bottom:0;height:var(--th);width:calc(50% - var(--tb)/2 - var(--fx) + 1px);background:#fff}   /* +1px: no seam */
+.sh.l{left:0}
+.sh.r{right:0}
+.notch .cv{position:absolute;bottom:0;height:var(--th);width:var(--fx);fill:#fff;shape-rendering:geometricPrecision}
+.cv.l{left:calc(50% - var(--tb)/2 - var(--fx))}
+.cv.r{right:calc(50% - var(--tb)/2 - var(--fx))}
+.cn{bottom:var(--th);width:var(--r);height:var(--r)}                     /* the panel's own bottom corners */
+.cn.l{left:0;background:radial-gradient(circle at 100% 0,transparent calc(var(--r) - .5px),#fff var(--r))}
+.cn.r{right:0;background:radial-gradient(circle at 0 0,transparent calc(var(--r) - .5px),#fff var(--r))}
+
+/* ---- the arrow, at the top of its tab ---- */
+.cue{position:absolute;z-index:4;left:50%;bottom:calc(var(--th) - var(--cue)*.42);transform:translateX(-50%);
+  width:var(--cue);height:var(--cue);padding:0;border:0;border-radius:999px;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:opacity .3s ease .9s}
+.cue svg{width:48px;height:48px;filter:url(#glass-sm);animation:bob 1.6s ease-in-out infinite}   /* 15% smaller (was 56) */
+@keyframes bob{0%,100%{transform:translateY(0);opacity:.75}50%{transform:translateY(6px);opacity:1}}
+.go .cue{opacity:0;pointer-events:none;transition:opacity .2s ease}
+.lite .cue svg{filter:url(#glass-lite)}
+
+/* "Continue to timetable" pill for a visitor who is already signed in */
+.resume{position:absolute;z-index:3;top:clamp(16px,2.4vw,40px);inset-inline-end:clamp(16px,2.4vw,40px);display:flex;align-items:center;gap:.7em;
+  padding:.7em 1.3em;border-radius:999px;background:var(--glass);box-shadow:var(--rim);color:var(--ink);text-decoration:none;
+  font-size:clamp(12px,1vw,18px);font-weight:700;transition:transform .2s,filter .2s,opacity .3s ease .9s}
+.resume:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.resume svg{width:1.4em;height:1.4em;transform:scaleX(-1)}
+.resume[dir=rtl] svg{transform:none}
+.resume[hidden]{display:none}
+.go .resume{opacity:0;pointer-events:none;transition:opacity .2s ease}
+
+/* ---- login content rises in line by line once the banner has formed ---- */
+.rv{opacity:0;transform:translateY(14px);transition:opacity .3s ease,transform .3s ease}
+.go .rv{opacity:1;transform:none;
+  transition:opacity .6s ease calc(1.25s + var(--i,0)*.08s),transform .6s ease calc(1.25s + var(--i,0)*.08s)}
+
+@media (prefers-reduced-motion:reduce){
+  .slide,.mark,.word,.aur.b,.rv,.notch,.cue,.resume{transition:none!important}
+  .mark .pulse,.cue svg{animation:none}}
+.lite .mark .pulse{animation:none}

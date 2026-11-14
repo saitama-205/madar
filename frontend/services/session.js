@@ -12,6 +12,9 @@
     signOut: () => del("madar.auth"),
     lang: () => (get("madar.lang") === "ar" ? "ar" : "en"),
     setLang: (code) => set("madar.lang", code),
+    // "light" or "dark": the saved choice, else the device's setting.
+    theme: () => get("madar.theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+    setTheme: (v) => set("madar.theme", v === "dark" ? "dark" : "light"),
     rememberedId: () => get("madar.school_id") || "",
     rememberId: (id) => set("madar.school_id", id),
     forgetId: () => del("madar.school_id"),
