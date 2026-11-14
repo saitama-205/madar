@@ -382,3 +382,34 @@ fieldset.cover legend { padding: 0; }
   .tabs a { padding: .6em .9em; font-size: 13px; }
   .tabs .thumb { top: 4px; bottom: 4px; }
 }
+
+/* ---------- layout polish: wrapping rows, equal buttons, no clipped text, tables scroll inside their card ---------- */
+/* one card padding everywhere (header cards and panels) */
+.panel, .card { padding: clamp(14px, 1.7vw, 32px); }
+
+/* buttons: same line height and a common minimum height, so a <label> button and a <button> line up in a row */
+.btn { line-height: 1.25; text-align: center; }
+.row > .btn:not(.mini), .row > label.btn { min-height: 2.9em; }
+.row { gap: 10px; }
+
+/* text never spills out of its card */
+.panel, .card, .msg, .help, .cover, .bubble, .tile, .choose, .chip, .bul li, .preview h3, .cell b, .cell small, .stat.val {
+  overflow-wrap: anywhere; }
+.chip { max-width: 100%; }
+.seg { max-width: 100%; }
+.cell { min-width: 0; }
+
+/* a table that is not wrapped in .scroll still scrolls inside its card instead of stretching the page */
+.panel table { max-width: 100%; }
+
+@media (max-width: 900px) {
+  .panel table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .panel, .card { padding: 14px; }
+}
+@media (max-width: 480px) {
+  input[type=text], select { min-width: 0; max-width: 100%; }
+  .row > .btn:not(.mini), .row > label.btn { flex: 1 1 auto; white-space: normal; }
+  .row.spread { gap: 8px; }
+  .hero-cards.home { gap: 10px; }
+  .page { gap: 12px; }
+}
