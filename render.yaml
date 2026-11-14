@@ -1,0 +1,14 @@
+# Render blueprint (free plan). Render builds from the repo root.
+# The free plan has a temporary disk: the database is rebuilt from database/seed_data.json on every start,
+# so teachers/rules added through the app and generated timetables are lost when the service restarts.
+services:
+  - type: web
+    name: madar
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
