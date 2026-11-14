@@ -1,6 +1,7 @@
 """Madar backend: FastAPI app. Run: cd backend, then `uvicorn main:app --reload` (see backend/README.md)."""
 import os
 import sys
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from errors import ApiError  # noqa: E402
 from routes_school import router as school_router  # noqa: E402
 from routes_rules import router as rules_router  # noqa: E402
 from routes_timetable import router as timetable_router  # noqa: E402
+from solver import generate_timetable  # noqa: E402
 
 FRONTEND_DIR = ROOT / "frontend"
 
@@ -33,7 +35,24 @@ def error_response(status: int, error: str, message: str) -> JSONResponse:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     seed_if_empty()  # first start (or a fresh Render disk): create tables and load the school's data
+    if os.environ.get("MADAR_AUTO_GENERATE", "1") != "0":
+        # Solve in the background so /api/health answers at once. Until it finishes, GET /api/timetable is empty.
+        threading.Thread(target=generate_in_background, name="startup-generate", daemon=True).start()
     yield
+
+
+def generate_in_background():
+    """Build the first timetable after startup. Uses its own connection; failures are logged, never fatal."""
+    conn = get_connection()
+    try:
+        has_lessons = conn.execute("SELECT 1 FROM lessons LIMIT 1").fetchone() is not None
+        if not has_lessons:
+            result = generate_timetable(conn)
+            print(f"Startup timetable ready: {result}", flush=True)
+    except Exception as exc:  # e.g. another Generate is already running, or the data is incomplete
+        print(f"Startup timetable not generated: {exc!r}", flush=True)
+    finally:
+        conn.close()
 
 
 def create_app(frontend_dir: Path = FRONTEND_DIR) -> FastAPI:

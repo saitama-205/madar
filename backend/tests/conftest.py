@@ -32,6 +32,7 @@ def seeded(conn):
 def api(tmp_path, monkeypatch):
     """The real app (starts and seeds like production) on a temp database, plus a direct DB connection."""
     monkeypatch.setenv("MADAR_DB", str(tmp_path / "api.db"))
+    monkeypatch.setenv("MADAR_AUTO_GENERATE", "0")  # tests control when the solver runs
     from fastapi.testclient import TestClient
 
     from database.db import get_connection
