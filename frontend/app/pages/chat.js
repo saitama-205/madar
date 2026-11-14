@@ -1,5 +1,6 @@
 // Chat: type a request in English or Arabic -> the backend's AI turns it into a rule (POST /api/rules/parse)
 // -> preview bubble -> Apply (save rule + regenerate) or Cancel. Nothing changes before Apply.
+import { mountBuilder, tryExample } from "./request_builder.js";
 import { $, t, esc, iso, api, ApiFail, updating, state, ruleText, heading, ICON, teacherPicker, setStale, reportUpdate } from "../core.js";
 
 let picker = null;          // optional teacher autocomplete next to the text box
@@ -24,7 +25,8 @@ export async function render() {
           <input type="text" id="ask" autocomplete="off" placeholder="${esc(t("chat_placeholder"))}" aria-label="${esc(t("chat_placeholder"))}">
           <button class="btn" id="send" type="submit">${esc(t("chat_send"))}</button>
         </form>
-        <div class="chips ex" aria-label="${esc(t("chat_try"))}">${EXAMPLES.map((x) => `<button type="button" class="chip example" dir="auto">${esc(x)}</button>`).join("")}</div>
+        <div class="chips ex" aria-label="${esc(t("chat_try"))}"><button type="button" class="chip tryit" id="try-this">${esc(t("chat_tryit"))}</button>${EXAMPLES.map((x) => `<button type="button" class="chip example" dir="auto">${esc(x)}</button>`).join("")}</div>
+        <div id="builder"></div>
       </section>
       <aside class="side">
         <section class="panel" id="saved-rules"></section>
@@ -42,6 +44,9 @@ export async function render() {
 
   document.querySelectorAll(".example").forEach((b) => (b.onclick = () => { $("#ask").value = b.textContent; $("#ask").focus(); }));
   $("#composer").onsubmit = (e) => { e.preventDefault(); ask(); };
+  const fill = (text) => { $("#ask").value = text; $("#ask").focus(); };
+  $("#try-this").onclick = async () => fill(await tryExample());
+  mountBuilder($("#builder"), fill);
   picker = teacherPicker($("#chat-teacher"), { label: t("chat_teacher_pick"), placeholder: t("chat_teacher_ph"),
     onPick: (id) => { const x = state.teachers.find((y) => y.id === id); const box = $("#ask");
       if (x && !box.value.toLowerCase().includes(x.name.toLowerCase())) { box.value = (box.value.trim() + " " + x.name).trim(); box.focus(); } } });
