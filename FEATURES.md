@@ -11,3 +11,4 @@ Things we add **after the core works** (see the demo goal in `CONTRACT.md`).
 - [ ] Explain failures: when generation fails, say which rule or teacher load causes the conflict
 - [ ] Teacher workload view: lessons per teacher per day
 - [ ] Undo / save timetable versions
+- [ ] *(Stretch)* PDF / messy-file import using AI, always with a preview (same preview-then-confirm flow as the `.xlsx` import in `CONTRACT.md`; the AI only fills the preview, the solver still only reads the database)
