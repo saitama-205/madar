@@ -1,6 +1,8 @@
 // Absences: write the excuse (matched to a teacher name, no AI) or pick the teacher, pick the day,
 // then POST /api/absences lists every lesson that needs cover with ranked substitutes. Nothing is saved.
-import { $, $$, t, esc, iso, api, state, subjectName, dayName, DAYS, options, msg, heading, ICON, lang } from "../core.js";
+import { $, $$, t, esc, iso, api, state, subjectName, dayName, DAYS, msg, heading, ICON, lang, teacherPicker } from "../core.js";
+
+let picker = null;
 
 const ui = { text: "", teacherId: null, day: Math.min(Math.max(new Date().getDay(), 0), 4), result: null, choices: null };
 if (new Date().getDay() > 4) ui.day = 0;                   // Friday / Saturday: start from Sunday
@@ -28,7 +30,6 @@ function matchTeachers(text) {
 
 export async function render() {
   heading(t("head_abs_e"), t("head_abs_t"), t("head_abs_s"));
-  ui.teacherId ??= state.teachers[0]?.id ?? null;
   $("#page").innerHTML = `
     <section class="panel">
       <h2>${esc(t("abs_card_t"))}</h2><p class="help">${esc(t("abs_card_d"))}</p>
@@ -36,8 +37,7 @@ export async function render() {
         <label class="field">${esc(t("abs_excuse"))}<input type="text" id="excuse" dir="auto" value="${esc(ui.text)}" placeholder="${esc(t("abs_excuse_ph"))}"></label>
         <div id="who-pick"></div>
         <div class="row" style="margin-top:12px">
-          <label class="field grow">${esc(t("abs_or_pick"))}<select id="abs-teacher">${options(state.teachers, ui.teacherId,
-            (x) => `${iso(x.name)} · ${subjectName(x.subject_id)}`)}</select></label>
+          <div class="grow" id="abs-teacher"></div>
           <label class="field">${esc(t("abs_day"))}<select id="abs-day">${DAYS.map((d) =>
             `<option value="${d}" ${d === ui.day ? "selected" : ""}>${esc(dayName(d))}</option>`).join("")}</select></label>
         </div>
@@ -47,8 +47,8 @@ export async function render() {
     </section>
     <div id="abs-out"></div>`;
 
-  const sel = $("#abs-teacher");
-  sel.onchange = () => { ui.teacherId = Number(sel.value); ui.text = ""; $("#excuse").value = ""; $("#who-pick").innerHTML = ""; };
+  picker = teacherPicker($("#abs-teacher"), { label: t("abs_or_pick"), id: ui.teacherId,
+    onPick: (id) => { ui.teacherId = id; if (id != null) { ui.text = ""; $("#excuse").value = ""; $("#who-pick").innerHTML = ""; } } });
   $("#abs-day").onchange = (e) => { ui.day = Number(e.target.value); };
   $("#excuse").oninput = (e) => { ui.text = e.target.value; };
   $("#abs-form").onsubmit = (e) => { e.preventDefault(); find(); };
@@ -69,10 +69,11 @@ async function find() {
       return;
     }
     setTeacher(hits[0].id);
-  } else if (ui.teacherId == null) { pick.innerHTML = msg("warn", esc(t("abs_empty"))); return; }
+  } else if (picker.id() == null) { pick.innerHTML = msg("warn", esc(t("abs_empty"))); return; }
+  else ui.teacherId = picker.id();
   await run();
 }
-function setTeacher(id) { ui.teacherId = id; $("#abs-teacher").value = String(id); }
+function setTeacher(id) { ui.teacherId = id; picker.set(id); }
 
 async function run() {
   const btn = $("#abs-go"); btn.disabled = true;

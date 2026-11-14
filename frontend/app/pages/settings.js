@@ -1,6 +1,6 @@
 // Settings: language, appearance (dark mode), account, start page, sign out, demo data, links.
 import { $, t, esc, api, generate, setStale, toast, busy, confirmBox, heading } from "../core.js";
-import { applyLang, applyTheme, refreshAll, render as renderApp } from "../main.js";
+import { applyLang, applyTheme, refreshAll, rebuildTopbar } from "../main.js";
 
 const seg = (id, items, value) => `<div class="seg" id="${id}" role="group">${items.map(([v, label]) =>
   `<button type="button" data-v="${v}" class="${v === value ? "on" : ""}" aria-pressed="${v === value}">${esc(label)}</button>`).join("")}</div>`;
@@ -30,7 +30,8 @@ export async function render() {
   $("#set-theme").onclick = (e) => {
     const v = e.target.closest("button")?.dataset.v;
     if (!v || v === Session.theme()) return;
-    Session.setTheme(v); applyTheme(); renderApp();
+    Session.setTheme(v); applyTheme(); rebuildTopbar();
+    e.currentTarget.querySelectorAll("button").forEach((b) => { b.classList.toggle("on", b.dataset.v === v); b.setAttribute("aria-pressed", String(b.dataset.v === v)); });
   };
   $("#signout").onclick = () => { Session.signOut(); location.href = "../"; };
   $("#reset").onclick = async (e) => {

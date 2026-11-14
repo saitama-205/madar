@@ -1,12 +1,30 @@
 /* Dark mode (html[data-theme=dark]), shared by the entry page and the app.
-   Like the reference: the gradient panels turn deep navy-indigo with blue and violet glows and their glass goes
-   dark; the white page and its pale panels stay light. Colours: ink #0b1b4d, night card #14286b, text #e6eeff, mint accents. */
-html[data-theme=dark] { color-scheme: light; }
+   Like the reference: a deep navy page, the gradient panels turn night blue, and every panel/card is a dark blue tile
+   with a blue halo: a bright rim on its lit edge, light glowing in from the inside, and soft blue light spilling out. */
+html[data-theme=dark] {
+  color-scheme: dark;
+  --page: #050c29;
+  --ink: #e6eeff; --soft: #a3b4e6; --muted: #7183bd;
+  --panel: #0a1650; --line: rgba(120,160,255,.22); --field: rgba(120,160,255,.14); --rim: rgba(120,160,255,.38);
+  --ok-tint: rgba(46,158,107,.16); --ok-text: #9fe8c6; --err-tint: rgba(198,40,40,.18); --warn-tint: rgba(199,125,0,.16);
+  /* the halo */
+  --tile: radial-gradient(120% 80% at 50% 115%, rgba(48,100,255,.32), transparent 62%),
+          linear-gradient(165deg, #0e2170 0%, #0a1756 50%, #071142 100%);
+  --halo: inset 0 1px 0 rgba(180,205,255,.30), inset 0 0 0 1px rgba(120,160,255,.26),
+          inset 0 -22px 46px -18px rgba(70,120,255,.55), inset 0 0 40px rgba(40,90,255,.18),
+          0 0 0 1px rgba(8,16,60,.6), 0 22px 60px -24px rgba(30,85,255,.55), 0 0 70px -18px rgba(30,85,255,.32);
+}
+/* navy page with soft blue light behind the tiles */
+html[data-theme=dark] body {
+  background: radial-gradient(900px 600px at 18% 35%, rgba(30,70,230,.20), transparent 65%),
+              radial-gradient(800px 600px at 85% 75%, rgba(60,50,230,.16), transparent 65%), var(--page);
+  color: var(--ink); }
 
 /* ---- night gradient (app hero .hero, entry panels .aurora) ---- */
 html[data-theme=dark] .hero,
 html[data-theme=dark] .aurora:not(.flip) { background: linear-gradient(0deg, #2a3aa8 0%, #18216b 50%, #0b1340 100%); }
 html[data-theme=dark] .aurora.flip { background: linear-gradient(180deg, #2a3aa8 0%, #18216b 50%, #0b1340 100%); }
+html[data-theme=dark] .hero { box-shadow: 0 0 0 1px rgba(120,160,255,.22), 0 30px 80px -30px rgba(30,85,255,.6); }
 /* blob order is the same everywhere: 1 electric, 2 violet, 3 mint, 4 lavender, 5 white, 6 royal, 7 sky, 8 white, 9 bright blue */
 html[data-theme=dark] :is(.b1,.blob.b1) { background: #1f2fd6 !important; }
 html[data-theme=dark] :is(.b2,.blob.b2) { background: #4a2bd9 !important; }
@@ -21,12 +39,70 @@ html[data-theme=dark] :is(.b9,.blob.b9) { background: #2563ff !important; }
 /* ---- dark glass on the night gradient ---- */
 html[data-theme=dark] :is(.glass, .resume) {
   background: linear-gradient(140deg, rgba(52,70,170,.55), rgba(20,32,100,.42));
-  box-shadow: inset 0 0 0 1.5px rgba(170,190,255,.32), inset 0 -12px 22px rgba(0,0,0,.18);
+  box-shadow: inset 0 1px 0 rgba(190,210,255,.35), inset 0 0 0 1.5px rgba(170,190,255,.28), inset 0 -16px 30px -12px rgba(90,140,255,.45),
+              0 16px 40px -18px rgba(20,60,255,.6);
   color: #e6eeff; }
-html[data-theme=dark] .glass .eyebrow { color: var(--mint, #baf4e5); }
+html[data-theme=dark] .eyebrow { color: #8fb0ff; }
+html[data-theme=dark] .glass .eyebrow { color: #baf4e5; }
 html[data-theme=dark] .glass :is(.help, .sub, .stat-label) { color: #c3cff5; }
 html[data-theme=dark] .glass :is(.stat, .school) { color: #a9c4ff; }
 html[data-theme=dark] .tabs a { color: #e6eeff; }
 html[data-theme=dark] .tabs a:hover { background: rgba(170,190,255,.16); }
 html[data-theme=dark] .brand-mark { background: #e6eeff; }
-html[data-theme=dark] .quick { box-shadow: 0 8px 22px rgba(0,0,0,.35), inset 0 0 0 1.5px rgba(170,190,255,.3); }
+html[data-theme=dark] .quick { box-shadow: 0 0 40px -6px rgba(67,31,255,.65), inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1.5px rgba(170,190,255,.3); }
+
+/* ---- the halo tiles: panels, cards, chat, dialogs ---- */
+html[data-theme=dark] .panel { background: var(--tile); border-color: rgba(120,160,255,.30); box-shadow: var(--halo); }
+html[data-theme=dark] :is(details.manual, .review, .bubble.bot, .example, .bubble .tile, .demo) {
+  background: rgba(255,255,255,.045); box-shadow: inset 0 0 0 1px rgba(120,160,255,.28), inset 0 1px 0 rgba(180,205,255,.18); color: var(--ink); }
+html[data-theme=dark] .example { color: #a9c4ff; }
+html[data-theme=dark] .bubble.me { box-shadow: 0 0 26px -6px rgba(67,31,255,.7); }
+html[data-theme=dark] .dlg { background: var(--tile); color: var(--ink); box-shadow: var(--halo), 0 30px 80px rgba(0,0,0,.6); }
+html[data-theme=dark] .dlg::backdrop { background: rgba(2,6,24,.6); }
+
+/* ---- controls ---- */
+html[data-theme=dark] :is(input[type=text], select) { background: #081446; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--rim); }
+html[data-theme=dark] :is(input[type=text], select):hover { box-shadow: inset 0 0 0 1.5px #6c98e3; }
+html[data-theme=dark] :is(input[type=text], select):focus { box-shadow: inset 0 0 0 1.5px #6c98e3, 0 0 0 3px rgba(90,140,255,.45), 0 0 24px -4px rgba(60,110,255,.6); }
+html[data-theme=dark] ::placeholder { color: #6f80b8; }
+html[data-theme=dark] .btn { box-shadow: 0 0 24px -8px rgba(67,31,255,.8); }
+html[data-theme=dark] .btn.secondary { background: transparent; color: #a9c4ff; box-shadow: inset 0 0 0 1.5px rgba(140,175,255,.6); }
+html[data-theme=dark] .btn.secondary:hover:not(:disabled) { background: #1c45d5; color: #fff; }
+html[data-theme=dark] .btn.danger { background: transparent; color: #ff9c9c; box-shadow: inset 0 0 0 1.5px rgba(255,120,120,.6); }
+html[data-theme=dark] .link, html[data-theme=dark] .sg-class { color: #8fb0ff; }
+html[data-theme=dark] .seg { background: rgba(255,255,255,.06); }
+html[data-theme=dark] .seg button { color: var(--ink); }
+html[data-theme=dark] .chip { background: rgba(120,160,255,.16); color: #dfe8ff; }
+html[data-theme=dark] .chip[style*="background"] { color: #0b1b4d; }              /* subject chips keep pastel + ink */
+html[data-theme=dark] .check { background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1.5px var(--rim); }
+html[data-theme=dark] .check:has(input:checked) { background: rgba(28,69,213,.35); color: #dfe8ff; box-shadow: inset 0 0 0 1.5px #6c98e3; }
+
+/* ---- messages ---- */
+html[data-theme=dark] .msg.ok { color: #9fe8c6; box-shadow: inset 0 0 0 1.5px rgba(46,158,107,.65); }
+html[data-theme=dark] .msg.err { color: #ffb3b3; box-shadow: inset 0 0 0 1.5px rgba(255,110,110,.6); }
+html[data-theme=dark] .msg.warn { color: #ffe2ad; box-shadow: inset 0 0 0 1.5px rgba(232,160,40,.6); }
+html[data-theme=dark] .badge-pass { background: rgba(46,158,107,.18); color: #9fe8c6; }
+
+/* ---- timetable + tables ---- */
+html[data-theme=dark] :is(.grid .dh, .sg-dname) { background: rgba(255,255,255,.06); border-bottom-color: rgba(120,160,255,.45); }
+html[data-theme=dark] .sg-day { border-bottom-color: rgba(120,160,255,.45); }
+html[data-theme=dark] :is(.cell.free, .sg-cells .free) { background: rgba(255,255,255,.05); color: var(--muted); }
+html[data-theme=dark] .cell.blocked { background: repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 6px, rgba(255,255,255,.1) 6px 12px); }
+html[data-theme=dark] .cell { color: #0b1b4d; }                                    /* pastel lessons keep ink text */
+html[data-theme=dark] .cell small { color: #2b3f7a; }
+html[data-theme=dark] .cell.free small, html[data-theme=dark] .cell.blocked small { color: var(--muted); }
+html[data-theme=dark] .sg-cells span:not(.free) { color: #0b1b4d; }
+html[data-theme=dark] table.heat td { color: #e6eeff; background: rgba(60,110,255,calc(var(--a) * .7)); }
+html[data-theme=dark] table.hours .total { color: #a9c4ff; }
+html[data-theme=dark] .bar { background: rgba(255,255,255,.08); }
+html[data-theme=dark] .bar i { box-shadow: 0 0 12px rgba(80,120,255,.7); }
+
+/* ---- entry page (login) ---- */
+html[data-theme=dark] :is(.h1, .h2, .flabel) { color: var(--ink); }
+html[data-theme=dark] .flink { color: #8fb0ff; }
+html[data-theme=dark] .lang { color: #a9c4ff; border-color: rgba(140,175,255,.6); }
+html[data-theme=dark] .lang:hover { background: #1c45d5; color: #fff; }
+html[data-theme=dark] .form { --nm: #0a1650; --nm-d: #030820; --nm-l: rgba(80,125,255,.28); }
+html[data-theme=dark] .m-field input { color: var(--ink); }
+html[data-theme=dark] .m-field .err { color: #ff9c9c; }
+html[data-theme=dark] .m-btn { box-shadow: 0 0 34px -6px rgba(40,90,255,.75), inset 0 1px 0 rgba(255,255,255,.3); }

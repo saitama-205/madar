@@ -55,15 +55,15 @@ html:not(.go) .aur.b .blob,.done .aur.a .blob,.slide:not(.vis) .blob{animation-p
   transition:transform .5s ease .8s}
 .go .notch{transform:translateY(100%);transition:transform .4s ease}
 .notch i{position:absolute;display:block}
-.sh{bottom:0;height:var(--th);width:calc(50% - var(--tb)/2 - var(--fx) + 1px);background:#fff}   /* +1px: no seam */
+.sh{bottom:0;height:var(--th);width:calc(50% - var(--tb)/2 - var(--fx) + 1px);background:var(--page,#fff)}   /* +1px: no seam; same colour as the page */
 .sh.l{left:0}
 .sh.r{right:0}
-.notch .cv{position:absolute;bottom:0;height:var(--th);width:var(--fx);fill:#fff;shape-rendering:geometricPrecision}
+.notch .cv{position:absolute;bottom:0;height:var(--th);width:var(--fx);fill:var(--page,#fff);shape-rendering:geometricPrecision}
 .cv.l{left:calc(50% - var(--tb)/2 - var(--fx))}
 .cv.r{right:calc(50% - var(--tb)/2 - var(--fx))}
 .cn{bottom:var(--th);width:var(--r);height:var(--r)}                     /* the panel's own bottom corners */
-.cn.l{left:0;background:radial-gradient(circle at 100% 0,transparent calc(var(--r) - .5px),#fff var(--r))}
-.cn.r{right:0;background:radial-gradient(circle at 0 0,transparent calc(var(--r) - .5px),#fff var(--r))}
+.cn.l{left:0;background:radial-gradient(circle at 100% 0,transparent calc(var(--r) - .5px),var(--page,#fff) var(--r))}
+.cn.r{right:0;background:radial-gradient(circle at 0 0,transparent calc(var(--r) - .5px),var(--page,#fff) var(--r))}
 
 /* ---- the arrow, at the top of its tab ---- */
 .cue{position:absolute;z-index:4;left:50%;bottom:calc(var(--th) - var(--cue)*.42);transform:translateX(-50%);
