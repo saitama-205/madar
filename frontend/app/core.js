@@ -193,6 +193,32 @@ export function teacherMatches(q) {
   const f = fold(q).trim();
   return state.teachers.filter((x) => !f || fold(x.name).includes(f));
 }
+// Typo-tolerant: names within a small edit distance of the query (any word of the name, or its start). Best first.
+function lev(a, b) {
+  const row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = row[0]; row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cur = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+  }
+  return row[b.length];
+}
+export function fuzzyTeachers(q, limit = 5) {
+  const f = fold(q).trim();
+  if (!f) return [];
+  const max = Math.max(1, Math.floor(f.length / 3));
+  const scored = [];
+  for (const x of state.teachers) {
+    const name = fold(x.name);
+    let best = lev(f, name.slice(0, f.length));
+    for (const tok of name.split(/\s+/).filter(Boolean)) best = Math.min(best, lev(f, tok), lev(f, tok.slice(0, f.length)));
+    if (best <= max) scored.push([best, x]);
+  }
+  return scored.sort((a, b) => a[0] - b[0]).slice(0, limit).map((s) => s[1]);
+}
 let acSeq = 0;
 // host: an element to fill. Returns { id() -> number|null, set(id), clear() }.
 export function teacherPicker(host, { label, id = null, placeholder = "", onPick = () => {} } = {}) {
@@ -205,11 +231,13 @@ export function teacherPicker(host, { label, id = null, placeholder = "", onPick
   let picked = null, shown = [], active = -1;
   const close = () => { list.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; };
   const choose = (x) => { picked = x.id; input.value = x.name; close(); onPick(x.id); };
-  const mark = () => list.querySelectorAll("li").forEach((li, i) => li.classList.toggle("on", i === active));
+  const mark = () => list.querySelectorAll("li[data-i]").forEach((li, i) => li.classList.toggle("on", i === active));
   function open() {
     shown = teacherMatches(input.value).slice(0, 30);
-    list.innerHTML = shown.length ? shown.map((x, i) => `<li role="option" data-i="${i}"><bdi>${esc(x.name)}</bdi><small>${esc(subjectName(x.subject_id))}</small></li>`).join("")
-      : `<li class="none" role="presentation">${esc(t("ac_none"))}</li>`;
+    let head = "";
+    if (!shown.length && input.value.trim()) { shown = fuzzyTeachers(input.value); head = shown.length ? `<li class="none" role="presentation">${esc(t("ac_didyou"))}</li>` : ""; }
+    const items = shown.map((x, i) => `<li role="option" data-i="${i}"><bdi>${esc(x.name)}</bdi><small>${esc(subjectName(x.subject_id))}</small></li>`).join("");
+    list.innerHTML = shown.length ? head + items : `<li class="none" role="presentation">${esc(t("ac_none"))}</li>`;
     list.hidden = false; input.setAttribute("aria-expanded", "true"); active = -1;
   }
   input.addEventListener("input", () => { picked = null; onPick(null); open(); });
@@ -222,7 +250,7 @@ export function teacherPicker(host, { label, id = null, placeholder = "", onPick
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault(); if (list.hidden) open();
-      if (shown.length) { active = (active + (e.key === "ArrowDown" ? 1 : -1) + shown.length) % shown.length; mark(); list.children[active]?.scrollIntoView({ block: "nearest" }); }
+      if (shown.length) { active = (active + (e.key === "ArrowDown" ? 1 : -1) + shown.length) % shown.length; mark(); list.querySelectorAll("li[data-i]")[active]?.scrollIntoView({ block: "nearest" }); }
     } else if (e.key === "Enter" && !list.hidden && shown.length && active >= 0) { e.preventDefault(); choose(shown[active]); }
     else if (e.key === "Enter" && !list.hidden && shown.length === 1) { e.preventDefault(); choose(shown[0]); }
     else if (e.key === "Escape") close();
@@ -232,6 +260,7 @@ export function teacherPicker(host, { label, id = null, placeholder = "", onPick
     set(tid) { const x = byId(state.teachers, tid); picked = x ? x.id : null; input.value = x ? x.name : ""; close(); },
     clear() { picked = null; input.value = ""; close(); },
     focus: () => input.focus(),
+    text: () => input.value,
   };
   if (id != null) api_.set(id);
   return api_;
