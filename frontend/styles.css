@@ -420,3 +420,6 @@ details.builder summary { cursor: pointer; font-weight: 700; min-height: 32px; d
 .bld-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; margin: 10px 0; }
 .bld-sentence { padding: .6em 1em; border-radius: 12px; background: var(--field); color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
 .chip.tryit { background: var(--accent); color: #fff; font-weight: 700; }
+
+.ai-ctl { min-width: 0; }
+.ai-ctl select { max-width: 100%; }

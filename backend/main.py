@@ -24,6 +24,7 @@ from routes_analytics import router as analytics_router  # noqa: E402
 from routes_hours import router as hours_router  # noqa: E402
 from routes_import import router as import_router  # noqa: E402
 from routes_rules import router as rules_router  # noqa: E402
+from routes_settings import router as settings_router  # noqa: E402
 from routes_timetable import router as timetable_router  # noqa: E402
 from solver import generate_timetable  # noqa: E402
 
@@ -102,6 +103,7 @@ def create_app(frontend_dir: Path = FRONTEND_DIR) -> FastAPI:
     app.include_router(analytics_router)  # analytics and AI insights
     app.include_router(import_router)  # Excel import
     app.include_router(hours_router)  # subject hours (study plan)
+    app.include_router(settings_router)  # AI model choice
 
     # Must be LAST: "/" matches everything, so API routes above are checked first.
     if frontend_dir.is_dir():

@@ -21,6 +21,15 @@ def no_auto_regenerate(monkeypatch):
     monkeypatch.setenv("MADAR_AUTO_REGENERATE", "0")
 
 
+@pytest.fixture(autouse=True)
+def reset_ai_model():
+    """The AI model choice lives in memory for the whole process: put it back after every test."""
+    from ai import llm
+
+    yield
+    llm.set_model(None)
+
+
 @pytest.fixture()
 def conn(tmp_path, monkeypatch):
     """An empty database in a temp folder (never touches database/madar.db)."""

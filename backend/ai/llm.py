@@ -1,7 +1,8 @@
 """OpenRouter client. Key and model come from environment variables (or the repo's git-ignored .env file).
 
     OPENROUTER_API_KEY   required for any AI feature; without it every call raises LLMUnavailable (never crashes)
-    OPENROUTER_MODEL     optional, default openai/gpt-4o-mini
+    OPENROUTER_MODEL     optional, default openai/gpt-4o-mini (the starting model; PUT /api/settings/ai can switch to
+                         another model from ALLOWED_MODELS until the server restarts)
 
 Callers catch LLMError (LLMUnavailable is a kind of LLMError) and fall back or answer 503 ai_unavailable.
 """
@@ -47,8 +48,29 @@ def get_api_key() -> str | None:
     return _setting("OPENROUTER_API_KEY")
 
 
-def get_model() -> str:
+# The only models the app may be switched to. Never extend this from user input.
+ALLOWED_MODELS = {
+    "openai/gpt-4o-mini": "GPT-4o mini (OpenAI)",
+    "google/gemini-2.0-flash-001": "Gemini 2.0 Flash (Google)",
+    "anthropic/claude-3.5-haiku": "Claude 3.5 Haiku (Anthropic)",
+}
+_chosen: str | None = None  # in memory only: the choice made with set_model(), lost on restart
+
+
+def default_model() -> str:
     return _setting("OPENROUTER_MODEL") or DEFAULT_MODEL
+
+
+def get_model() -> str:
+    return _chosen or default_model()
+
+
+def set_model(model: str | None) -> None:
+    """Switch the model used by every AI call. Only a whitelisted id (or None = back to the default) is accepted."""
+    global _chosen
+    if model is not None and model not in ALLOWED_MODELS:
+        raise ValueError(f"model must be one of: {', '.join(ALLOWED_MODELS)}")
+    _chosen = model
 
 
 def is_configured() -> bool:
