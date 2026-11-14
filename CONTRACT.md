@@ -31,6 +31,8 @@ Madar is an AI-assisted school timetable app for an elementary school in Kuwait
 - The backend serves the frontend files too, so the whole app runs with **one command**.
 - Run: `cd backend` → `pip install -r requirements.txt` → `uvicorn main:app --reload` → open http://localhost:8000
 - API docs auto-generated at http://localhost:8000/docs
+- The database is seeded **only when it is empty** (first start), never on a normal restart, so changes persist.
+  To start over: `POST /api/reset` or `python database/seed.py --reset`
 
 ## Shared rules
 
@@ -74,6 +76,7 @@ The database owner (saitama-205) provides `database/schema.sql`, `database/seed.
 | GET | `/api/rules` | – | `[{ "id", "kind", "params", "source_text" }]` |
 | POST | `/api/rules` | `{ "kind", "params", "source_text" }` | the saved rule |
 | DELETE | `/api/rules/{id}` | – | `{ "ok": true }` |
+| POST | `/api/reset` | – | `{ "ok": true }`. Wipes **all** tables (lessons, rules, added teachers/classes) and reloads the original school data from `database/seed.py` |
 | POST | `/api/rules/parse` *(stretch)* | `{ "text": "PE never in period 7" }` | `{ "kind", "params", "explanation" }` (preview, not saved) |
 | POST | `/api/absences` *(stretch)* | `{ "teacher_id", "day" }` | `[{ "day", "period", "class", "substitutes": [{ "teacher_id", "name" }] }]` |
 
