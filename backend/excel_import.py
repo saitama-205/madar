@@ -1,66 +1,67 @@
 """Excel import: build the .xlsx template, turn an uploaded .xlsx into a PREVIEW, and validate + save a confirmed
 import. The preview never touches the database; only `save_import` does, and only after `validate_import` passes.
 
+One sheet, one row per class + subject:  class | subject | teacher | hours_per_week
+Classes, subjects, the grade's study plan (hours per week) and the teachers with their classes are all derived from
+those rows.
+
 Teacher names are always shortened (ai.privacy.short_name: first name + initial), so full names from a spreadsheet
 are never stored, shown back or sent to the AI."""
 import io
-import re
 import sqlite3
 import zipfile
+from collections import defaultdict
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.utils.exceptions import InvalidFileException
 from pydantic import BaseModel, ConfigDict, Field
 
-from ai.normalize import class_name as normalize_class_name, key
+from ai.normalize import class_name as normalize_class_name, key, subject_id as match_subject
 from ai.privacy import short_name
 from errors import ApiError
 from solver import SLOTS_PER_WEEK
 
 MAX_FILE_BYTES = 5 * 1024 * 1024
 GRADES = range(1, 6)
-SHEET_CLASSES, SHEET_SUBJECTS, SHEET_TEACHERS = "Classes", "Subjects and hours", "Teachers"
-CLASS_COLUMNS = ["Class"]
-SUBJECT_COLUMNS = ["Subject", "Arabic name"] + [f"Grade {g}" for g in GRADES]
-TEACHER_COLUMNS = ["Teacher", "Subject", "Classes"]
+SHEET = "Timetable data"
+COLUMNS = ["class", "subject", "teacher", "hours_per_week"]
 
 
 def invalid_file(message: str) -> ApiError:
     return ApiError(400, "invalid_file", message)
 
 
+def class_order(name: str):
+    section, grade = name.split("/")
+    return int(grade), int(section)
+
+
 # ---------------------------------------------------------------- template
 
 def build_template(db: sqlite3.Connection) -> bytes:
-    """A workbook with the three sheets. Classes and subjects/hours are pre-filled with the school's current setup
-    (no personal data); the Teachers sheet only has its header (it would hold personal names)."""
+    """One sheet, pre-filled with the school's current setup: a row for every class and every subject the class has
+    lessons in, with its teacher's (already shortened) name and the lessons per week."""
     wb = Workbook()
     ws = wb.active
-    ws.title = SHEET_CLASSES
-    ws.append(CLASS_COLUMNS)
-    for r in db.execute("""SELECT name FROM classes
-                           ORDER BY grade, CAST(substr(name, 1, instr(name, '/') - 1) AS INTEGER)"""):
-        ws.append([r["name"]])
-
-    ws = wb.create_sheet(SHEET_SUBJECTS)
-    ws.append(SUBJECT_COLUMNS)
+    ws.title = SHEET
+    ws.append(COLUMNS)
+    teacher_of = {(r["class_id"], r["subject_id"]): r["name"] for r in db.execute(
+        """SELECT tc.class_id, t.subject_id, t.name FROM teacher_classes tc JOIN teachers t ON t.id = tc.teacher_id
+           ORDER BY t.id DESC""")}
+    classes = sorted(db.execute("SELECT id, name, grade FROM classes"), key=lambda c: class_order(c["name"]))
+    subjects = db.execute("SELECT id, name FROM subjects ORDER BY id").fetchall()
     hours = {(r["grade"], r["subject_id"]): r["per_week"] for r in db.execute("SELECT * FROM subject_hours")}
-    for s in db.execute("SELECT id, name, name_ar FROM subjects ORDER BY id"):
-        ws.append([s["name"], s["name_ar"]] + [hours.get((g, s["id"]), 0) for g in GRADES])
-
-    ws = wb.create_sheet(SHEET_TEACHERS)
-    ws.append(TEACHER_COLUMNS)
-
-    for sheet, widths in ((wb[SHEET_CLASSES], [12]), (wb[SHEET_SUBJECTS], [22, 24, 10, 10, 10, 10, 10]),
-                          (wb[SHEET_TEACHERS], [24, 22, 40])):
-        for cell in sheet[1]:
-            cell.font = Font(bold=True)
-        for i, w in enumerate(widths):
-            sheet.column_dimensions[chr(ord("A") + i)].width = w
-    # "1/1" would turn into a date in Excel: keep the class columns as text
-    wb[SHEET_CLASSES].column_dimensions["A"].number_format = "@"
-    wb[SHEET_TEACHERS].column_dimensions["C"].number_format = "@"
+    for c in classes:
+        for s in subjects:
+            h = hours.get((c["grade"], s["id"]), 0)
+            if h > 0:
+                ws.append([c["name"], s["name"], teacher_of.get((c["id"], s["id"]), ""), h])
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+    for letter, width in zip("ABCD", (10, 22, 24, 16)):
+        ws.column_dimensions[letter].width = width
+    ws.column_dimensions["A"].number_format = "@"        # "1/1" would turn into a date in Excel
     out = io.BytesIO()
     wb.save(out)
     return out.getvalue()
@@ -76,22 +77,25 @@ def _cell(value) -> str:
     return str(value).strip()
 
 
-def _sheet_rows(wb, title: str, columns: list[str], optional: tuple[str, ...] = ()) -> list[dict]:
-    """The data rows of one sheet as dicts keyed by the template's column names. Blank rows are dropped.
+def _sheet_rows(wb) -> list[dict]:
+    """The data rows of the sheet as dicts keyed by the template's column names. Blank rows are dropped.
     Each dict also has "_row" (the Excel row number) for error messages."""
-    match = next((n for n in wb.sheetnames if key(n) == key(title)), None)
+    match = next((n for n in wb.sheetnames if key(n) == key(SHEET)), None)
     if match is None:
-        raise invalid_file(f'The sheet "{title}" is missing. Download the template and keep its three sheets.')
+        if len(wb.sheetnames) == 1:
+            match = wb.sheetnames[0]       # a single sheet with another name is fine
+        else:
+            raise invalid_file(f'The sheet "{SHEET}" is missing. Download the template and keep its sheet and header row.')
     rows = list(wb[match].iter_rows(values_only=True))
     header = [key(_cell(c)) for c in (rows[0] if rows else [])]
     positions, missing = {}, []
-    for col in columns:
+    for col in COLUMNS:
         if key(col) in header:
             positions[col] = header.index(key(col))
-        elif col not in optional:
+        else:
             missing.append(col)
     if missing:
-        raise invalid_file(f'The sheet "{title}" is missing the column(s): {", ".join(missing)}. '
+        raise invalid_file(f'The sheet "{match}" is missing the column(s): {", ".join(missing)}. '
                            "Keep the header row from the template.")
     out = []
     for number, row in enumerate(rows[1:], start=2):
@@ -116,151 +120,110 @@ def read_workbook(content: bytes, filename: str):
         raise invalid_file("This file could not be read as an Excel workbook.") from None
 
 
-def parse_upload(content: bytes, filename: str) -> dict:
-    """Return the preview {classes, teachers, subject_hours, warnings}. Nothing is saved."""
+def parse_upload(content: bytes, filename: str, db: sqlite3.Connection | None = None) -> dict:
+    """Return the preview {rows: [{class, subject, teacher, hours_per_week}], warnings}. Nothing is saved.
+    With `db`, a subject written in Arabic (or any known alias) is turned into the school's English subject name."""
     wb = read_workbook(content, filename)
     try:
-        class_rows = _sheet_rows(wb, SHEET_CLASSES, CLASS_COLUMNS)
-        subject_rows = _sheet_rows(wb, SHEET_SUBJECTS, SUBJECT_COLUMNS, optional=("Arabic name",))
-        teacher_rows = _sheet_rows(wb, SHEET_TEACHERS, TEACHER_COLUMNS)
+        raw_rows = _sheet_rows(wb)
     finally:
         wb.close()
-    if not class_rows and not subject_rows and not teacher_rows:
-        raise invalid_file("The file has no data. Fill in the template (classes, subjects and hours, teachers).")
-    if not class_rows:
-        raise invalid_file(f'The sheet "{SHEET_CLASSES}" has no classes.')
-    if not subject_rows:
-        raise invalid_file(f'The sheet "{SHEET_SUBJECTS}" has no subjects.')
+    if not raw_rows:
+        raise invalid_file("The file has no data. Fill in the template: one row per class and subject.")
 
+    known = db.execute("SELECT id, name, name_ar FROM subjects").fetchall() if db is not None else []
     warnings: list[str] = []
-
-    # classes
-    classes, seen = [], set()
-    for r in class_rows:
-        name = normalize_class_name(_cell(r["Class"]))
-        if name is None or int(name.split("/")[1]) not in GRADES or int(name.split("/")[0]) < 1:
-            warnings.append(f'Classes row {r["_row"]}: "{_cell(r["Class"])}" is not a class like 2/5 '
-                            "(section/grade, grade 1 to 5), so it was ignored.")
-        elif name in seen:
-            warnings.append(f'Classes row {r["_row"]}: class {name} appears twice; the duplicate was ignored.')
-        else:
-            seen.add(name)
-            classes.append({"name": name, "grade": int(name.split("/")[1])})
-    if not classes:
-        raise invalid_file(f'The sheet "{SHEET_CLASSES}" has no valid class names (they look like 2/5).')
-
-    # subjects and hours
-    subject_hours, subjects, seen_subjects = [], [], set()
-    for r in subject_rows:
-        name = _cell(r["Subject"])
-        if not name:
-            warnings.append(f'Subjects row {r["_row"]}: the subject name is empty, so the row was ignored.')
+    rows, seen = [], set()
+    short_of: dict[tuple, str] = {}          # (subject key, raw teacher name) -> shortened name
+    owner: dict[tuple, str] = {}             # (subject key, shortened name) -> raw teacher name that owns it
+    for r in raw_rows:
+        where = f"Row {r['_row']}"
+        cname = normalize_class_name(_cell(r["class"]))
+        if cname is None or int(cname.split("/")[1]) not in GRADES or int(cname.split("/")[0]) < 1:
+            warnings.append(f'{where}: "{_cell(r["class"])}" is not a class like 2/5 (section/grade, grade 1 to 5), '
+                            "so the row was ignored.")
             continue
-        if key(name) in seen_subjects:
-            warnings.append(f'Subjects row {r["_row"]}: subject "{name}" appears twice; the duplicate was ignored.')
+        subject = _cell(r["subject"])
+        if not subject:
+            warnings.append(f"{where}: the subject is empty, so the row was ignored.")
             continue
-        seen_subjects.add(key(name))
-        ar = _cell(r.get("Arabic name"))
-        subjects.append({"name": name, "name_ar": ar})
-        for g in GRADES:
-            raw = r[f"Grade {g}"]
-            text = _cell(raw)
-            try:
-                hours = 0 if text == "" else int(text)
-                if hours < 0 or hours > SLOTS_PER_WEEK or (isinstance(raw, float) and not raw.is_integer()):
-                    raise ValueError
-            except ValueError:
-                raise invalid_file(f'Subjects row {r["_row"]}, Grade {g}: "{text}" must be a whole number of lessons '
-                                   f"per week (0 to {SLOTS_PER_WEEK}).") from None
-            subject_hours.append({"grade": g, "subject": name, "subject_ar": ar, "per_week": hours})
-    if not subjects:
-        raise invalid_file(f'The sheet "{SHEET_SUBJECTS}" has no subjects.')
-
-    grades_used = sorted({c["grade"] for c in classes})
-    for g in grades_used:
-        total = sum(h["per_week"] for h in subject_hours if h["grade"] == g)
-        if total != SLOTS_PER_WEEK:
-            warnings.append(f"Grade {g} has {total} lessons per week in total, but every class needs exactly "
-                            f"{SLOTS_PER_WEEK}. Generate will refuse until this is fixed.")
-
-    # teachers
-    subject_by_key = {}
-    for s in subjects:
-        subject_by_key[key(s["name"])] = s["name"]
-        if s["name_ar"]:
-            subject_by_key[key(s["name_ar"])] = s["name"]
-    class_names = {c["name"] for c in classes}
-    teachers, used_names = [], {}
-    for r in teacher_rows:
-        raw_name = _cell(r["Teacher"])
-        if not raw_name:
-            warnings.append(f'Teachers row {r["_row"]}: the teacher name is empty, so the row was ignored.')
+        sid = match_subject(subject, known) if known else None
+        if sid is not None:
+            subject = next(s["name"] for s in known if s["id"] == sid)
+        text = _cell(r["hours_per_week"])
+        raw = r["hours_per_week"]
+        try:
+            hours = int(text)
+            if hours < 0 or hours > SLOTS_PER_WEEK or (isinstance(raw, float) and not raw.is_integer()):
+                raise ValueError
+        except ValueError:
+            raise invalid_file(f'{where}: hours_per_week "{text}" must be a whole number of lessons per week '
+                               f"(0 to {SLOTS_PER_WEEK}).") from None
+        if (cname, key(subject)) in seen:
+            warnings.append(f"{where}: class {cname} already has a row for {subject}; the duplicate was ignored.")
             continue
-        subject = subject_by_key.get(key(_cell(r["Subject"])))
-        short = short_name(raw_name)  # never keep a full name
-        if subject is None:
-            warnings.append(f'Teachers row {r["_row"]}: {short} has subject "{_cell(r["Subject"])}", which is not in the '
-                            "subjects sheet, so the teacher was ignored.")
-            continue
-        listed = [normalize_class_name(p) or p.strip() for p in re.split(r"[,،;\n]+", _cell(r["Classes"])) if p.strip()]
-        known = list(dict.fromkeys(c for c in listed if c in class_names))
-        for c in dict.fromkeys(listed):
-            if c not in class_names:
-                warnings.append(f'Teachers row {r["_row"]}: {short} is listed for class "{c}", which does not exist, so it was ignored.')
-        if not known:
-            warnings.append(f"Teacher {short} has no classes.")
-        count = used_names.get(short, 0) + 1
-        used_names[short] = count
-        if count > 1:
-            warnings.append(f'Two teachers are shortened to "{short}"; the second is saved as "{short} ({count})".')
-            short = f"{short} ({count})"
-        teachers.append({"name": short, "subject": subject, "classes": known})
+        seen.add((cname, key(subject)))
 
-    # who is missing / double booked
-    taught = {}
-    for t in teachers:
-        for c in t["classes"]:
-            taught.setdefault((c, t["subject"]), []).append(t["name"])
-    for (c, s), names in sorted(taught.items()):
-        if len(names) > 1:
-            warnings.append(f"Class {c} has more than one {s} teacher ({', '.join(names)}). A class needs exactly one.")
-    for c in classes:
-        missing = [h["subject"] for h in subject_hours
-                   if h["grade"] == c["grade"] and h["per_week"] > 0 and (c["name"], h["subject"]) not in taught]
-        if missing:
-            warnings.append(f'Class {c["name"]} has no teacher for {", ".join(missing[:5])}'
-                            f'{" and more" if len(missing) > 5 else ""}, so Generate will skip it.')
-    return {"classes": classes, "teachers": teachers, "subject_hours": subject_hours, "warnings": warnings}
+        raw_teacher = _cell(r["teacher"])
+        teacher = ""
+        if raw_teacher:
+            tk = (key(subject), key(raw_teacher))
+            if tk not in short_of:
+                short = short_name(raw_teacher)             # never keep a full name
+                if (key(subject), short) in owner and owner[(key(subject), short)] != tk[1]:
+                    count = sum(1 for (s, _), v in short_of.items() if s == key(subject) and v.split(" (")[0] == short) + 1
+                    warnings.append(f'Two {subject} teachers are shortened to "{short}"; the second is saved as '
+                                    f'"{short} ({count})".')
+                    short = f"{short} ({count})"
+                else:
+                    owner[(key(subject), short)] = tk[1]
+                short_of[tk] = short
+            teacher = short_of[tk]
+        rows.append({"class": cname, "subject": subject, "teacher": teacher, "hours_per_week": hours})
+    if not rows:
+        raise invalid_file("The file has no valid rows (a class like 2/5, a subject and the hours per week).")
+
+    warnings += _consistency_warnings(rows)
+    return {"rows": rows, "warnings": warnings}
+
+
+def _consistency_warnings(rows: list[dict]) -> list[str]:
+    out = []
+    per_class = defaultdict(int)
+    for r in rows:
+        per_class[r["class"]] += r["hours_per_week"]
+    for c in sorted(per_class, key=class_order):
+        if per_class[c] != SLOTS_PER_WEEK:
+            out.append(f"Class {c} has {per_class[c]} lessons per week in total, but every class needs exactly "
+                       f"{SLOTS_PER_WEEK}. Generate will refuse until this is fixed.")
+    by_grade = defaultdict(lambda: defaultdict(set))       # grade -> subject key -> {hours}
+    for r in rows:
+        by_grade[int(r["class"].split("/")[1])][key(r["subject"])].add(r["hours_per_week"])
+    for g in sorted(by_grade):
+        for sk, hs in by_grade[g].items():
+            if len(hs) > 1:
+                name = next(r["subject"] for r in rows if key(r["subject"]) == sk)
+                out.append(f"Grade {g}: classes disagree on the hours of {name} ({', '.join(map(str, sorted(hs)))}). "
+                           "All classes of a grade must have the same hours, so Confirm will refuse.")
+    for r in rows:
+        if r["hours_per_week"] > 0 and not r["teacher"]:
+            out.append(f"Class {r['class']} has no teacher for {r['subject']}, so Generate will skip it.")
+    return out
 
 
 # ---------------------------------------------------------------- confirm
 
-class ClassIn(BaseModel):
+class RowIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    name: str = Field(max_length=20)
-    grade: int
-
-
-class TeacherIn(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    name: str = Field(max_length=100)
+    class_: str = Field(alias="class", max_length=20)
     subject: str = Field(max_length=100)
-    classes: list[str] = Field(default_factory=list, max_length=200)
-
-
-class HoursIn(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    grade: int
-    subject: str = Field(max_length=100)
-    subject_ar: str | None = Field(default=None, max_length=100)
-    per_week: int
+    teacher: str | None = Field(default="", max_length=100)
+    hours_per_week: int
 
 
 class ConfirmIn(BaseModel):
     model_config = ConfigDict(extra="ignore")  # "warnings" from the preview may be sent back and is not needed
-    classes: list[ClassIn] = Field(max_length=500)
-    teachers: list[TeacherIn] = Field(max_length=1000)
-    subject_hours: list[HoursIn] = Field(max_length=500)
+    rows: list[RowIn] = Field(max_length=5000)
 
 
 def _bad(message: str) -> ApiError:
@@ -269,70 +232,56 @@ def _bad(message: str) -> ApiError:
 
 def validate_import(data: ConfirmIn) -> dict:
     """Check everything again (the preview may have been edited). Returns the cleaned data or raises 422."""
-    if not data.classes:
-        raise _bad("There must be at least one class.")
-    if not data.subject_hours:
-        raise _bad("There must be at least one subject with hours.")
-    classes, names = [], set()
-    for c in data.classes:
-        name = normalize_class_name(c.name)
-        if name is None or int(name.split("/")[0]) < 1 or int(name.split("/")[1]) != c.grade or c.grade not in GRADES:
-            raise _bad(f'Class "{c.name}" (grade {c.grade}) is not valid. Use section/grade like 2/5, grade 1 to 5, '
-                       "and the grade must match the name.")
-        if name in names:
-            raise _bad(f"Class {name} appears twice.")
-        names.add(name)
-        classes.append({"name": name, "grade": c.grade})
-
-    subjects: dict[str, str | None] = {}
-    hours, seen = [], set()
-    for h in data.subject_hours:
-        name = h.subject.strip()
-        if not name:
-            raise _bad("A subject name is empty.")
-        if h.grade not in GRADES:
-            raise _bad(f"Subject {name}: grade must be 1 to 5.")
-        if not 0 <= h.per_week <= SLOTS_PER_WEEK:
-            raise _bad(f"Subject {name}, grade {h.grade}: lessons per week must be 0 to {SLOTS_PER_WEEK}.")
-        if (key(name), h.grade) in seen:
-            raise _bad(f"Subject {name} has two rows for grade {h.grade}.")
-        seen.add((key(name), h.grade))
-        known = next((n for n in subjects if key(n) == key(name)), None)
-        subjects.setdefault(known or name, (h.subject_ar or "").strip() or None)
-        hours.append({"grade": h.grade, "subject": known or name, "per_week": h.per_week})
-
-    teachers, used = [], set()
-    for t in data.teachers:
-        short = short_name(t.name)
-        if not short:
-            raise _bad("A teacher name is empty.")
-        if short in used:
-            raise _bad(f'Two teachers are called "{short}". Make the names different (for example add "(2)").')
-        used.add(short)
-        subject = next((n for n in subjects if key(n) == key(t.subject)), None)
-        if subject is None:
-            raise _bad(f'Teacher {short}: subject "{t.subject}" is not in the subjects list.')
-        listed = []
-        for c in t.classes:
-            cn = normalize_class_name(c) or c
-            if cn not in names:
-                raise _bad(f'Teacher {short}: class "{c}" does not exist.')
-            listed.append(cn)
-        teachers.append({"name": short, "subject": subject, "classes": list(dict.fromkeys(listed))})
-    return {"classes": classes, "subjects": subjects, "hours": hours, "teachers": teachers}
+    if not data.rows:
+        raise _bad("There must be at least one row.")
+    classes: dict[str, int] = {}
+    subjects: dict[str, None] = {}
+    hours_by: dict[tuple, int] = {}          # (grade, subject) -> per_week
+    taught: dict[tuple, list] = defaultdict(list)    # (shortened name, subject) -> [class names]
+    seen = set()
+    for r in data.rows:
+        name = normalize_class_name(r.class_)
+        if name is None or int(name.split("/")[0]) < 1 or int(name.split("/")[1]) not in GRADES:
+            raise _bad(f'Class "{r.class_}" is not valid. Use section/grade like 2/5, grade 1 to 5.')
+        grade = int(name.split("/")[1])
+        subject = r.subject.strip()
+        if not subject:
+            raise _bad(f"Class {name}: a subject name is empty.")
+        known = next((n for n in subjects if key(n) == key(subject)), None)
+        subject = known or subject
+        subjects.setdefault(subject, None)
+        if not 0 <= r.hours_per_week <= SLOTS_PER_WEEK:
+            raise _bad(f"Class {name}, {subject}: hours_per_week must be 0 to {SLOTS_PER_WEEK}.")
+        if (name, subject) in seen:
+            raise _bad(f"Class {name} has two rows for {subject}.")
+        seen.add((name, subject))
+        classes[name] = grade
+        if (grade, subject) in hours_by and hours_by[grade, subject] != r.hours_per_week:
+            raise _bad(f"Grade {grade}: {subject} has different hours in different classes "
+                       f"({hours_by[grade, subject]} and {r.hours_per_week}). All classes of a grade need the same hours.")
+        hours_by[grade, subject] = r.hours_per_week
+        teacher = short_name(r.teacher or "") if (r.teacher or "").strip() else ""
+        if teacher and r.hours_per_week > 0:
+            taught[teacher, subject].append(name)
+    return {"classes": [{"name": n, "grade": g} for n, g in sorted(classes.items(), key=lambda kv: class_order(kv[0]))],
+            "subjects": subjects,
+            "hours": [{"grade": g, "subject": s, "per_week": hours_by.get((g, s), 0)} for s in subjects for g in GRADES],
+            "teachers": [{"name": t, "subject": s, "classes": cs} for (t, s), cs in taught.items()]}
 
 
 TABLES = ["lessons", "rules", "teacher_classes", "teachers", "subject_hours", "classes", "subjects"]
 
 
 def save_import(db: sqlite3.Connection, clean: dict) -> None:
-    """Replace ALL data (including lessons and rules) with the import, in one transaction."""
+    """Replace ALL data (including lessons and rules) with the import, in one transaction.
+    A subject that already exists keeps its Arabic name."""
+    arabic = {key(r["name"]): r["name_ar"] for r in db.execute("SELECT name, name_ar FROM subjects")}
     with db:
         for table in TABLES:
             db.execute(f"DELETE FROM {table}")
         subject_ids = {}
-        for i, (name, name_ar) in enumerate(clean["subjects"].items(), start=1):
-            db.execute("INSERT INTO subjects (id, name, name_ar) VALUES (?, ?, ?)", (i, name, name_ar))
+        for i, name in enumerate(clean["subjects"], start=1):
+            db.execute("INSERT INTO subjects (id, name, name_ar) VALUES (?, ?, ?)", (i, name, arabic.get(key(name))))
             subject_ids[name] = i
         db.executemany("INSERT INTO subject_hours (grade, subject_id, per_week) VALUES (?, ?, ?)",
                        [(h["grade"], subject_ids[h["subject"]], h["per_week"]) for h in clean["hours"]])

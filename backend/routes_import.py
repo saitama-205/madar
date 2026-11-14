@@ -21,12 +21,12 @@ def template(db: sqlite3.Connection = Depends(get_db)):
 
 
 @router.post("/import")
-async def preview(file: UploadFile | None = File(default=None)):
+async def preview(file: UploadFile | None = File(default=None), db: sqlite3.Connection = Depends(get_db)):
     """Read the uploaded .xlsx and return what it contains. Nothing is saved."""
     if file is None:
         raise ApiError(400, "invalid_file", 'No file was sent. Send the .xlsx in the multipart form field "file".')
     content = await file.read(MAX_FILE_BYTES + 1)
-    return parse_upload(content, file.filename or "")
+    return parse_upload(content, file.filename or "", db)
 
 
 @router.post("/import/confirm")
