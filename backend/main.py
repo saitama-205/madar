@@ -20,6 +20,7 @@ from database.seed import seed, seed_if_empty  # noqa: E402
 from errors import ApiError  # noqa: E402
 from routes_school import router as school_router  # noqa: E402
 from routes_absences import router as absences_router  # noqa: E402
+from routes_analytics import router as analytics_router  # noqa: E402
 from routes_rules import router as rules_router  # noqa: E402
 from routes_timetable import router as timetable_router  # noqa: E402
 from solver import generate_timetable  # noqa: E402
@@ -96,6 +97,7 @@ def create_app(frontend_dir: Path = FRONTEND_DIR) -> FastAPI:
     app.include_router(timetable_router)  # generate
     app.include_router(rules_router)  # rules
     app.include_router(absences_router)  # absences and substitutes
+    app.include_router(analytics_router)  # analytics and AI insights
 
     # Must be LAST: "/" matches everything, so API routes above are checked first.
     if frontend_dir.is_dir():

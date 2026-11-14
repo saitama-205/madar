@@ -108,6 +108,11 @@ The database owner (saitama-205) provides `database/schema.sql`, `database/seed.
 - `rule_check`: Python re-checks the hard rules below against the saved lessons. `ok` is `false` and `violations` is filled if any rule is broken.
 - **The AI rule:** for `/api/analytics/insights` the AI receives only these metrics. Every number in its answer must come from them: the AI explains and suggests, it never calculates, and its recommendations are text only (nothing is changed automatically). The key is `OPENROUTER_API_KEY` in `.env` (and Render's environment), never in the code or on GitHub.
 
+**AI endpoints details** (all use OpenRouter; `OPENROUTER_API_KEY` in `.env`/Render, optional `OPENROUTER_MODEL`, default `openai/gpt-4o-mini`; only shortened teacher names are ever sent to the AI):
+- `POST /api/rules/parse`: one rule per request. `422` `cannot_parse` (the request does not fit one rule kind, or a name/subject/class/day/period is not recognised), `503` `ai_unavailable` (no key or the AI is down). Preview only; the `explanation` is written by the backend from the validated params.
+- `POST /api/absences`: no AI is needed for the result. `day` is `0`–`4`. `404` unknown teacher, `409` `no_timetable`. Besides the contract fields each item also has `class_id`, `subject`, `explanation` (one sentence about the top substitute, `null` if there is none) and `explanation_source` (`"ai"` or `"template"`); each substitute also has `reason` (`same_subject_free` / `free_only`) and `day_load`. Ranking: same subject first, then fewest lessons that day; teachers with a lesson or a `teacher_unavailable` rule in that slot are left out; at most 3 per lesson.
+- `POST /api/analytics/insights`: `502` `ai_bad_answer` if the AI's answer contains a number that is not in the metrics (it is discarded).
+
 **Import (.xlsx) details:**
 - Template sheets and columns: **Classes** `Class` (e.g. `1/1`) · **Subjects and hours** `Subject`, `Arabic name`, `Grade 1` … `Grade 5` (lessons per week) · **Teachers** `Teacher`, `Subject`, `Classes` (comma-separated, e.g. `1/1, 2/1`).
 - The preview refers to subjects and classes by **name** (nothing is saved yet, so there are no ids). Confirm checks the data again before saving; if it is invalid nothing is changed.
