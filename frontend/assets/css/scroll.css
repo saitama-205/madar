@@ -1,0 +1,27 @@
+#top .stage{transform:translateY(calc(var(--p,0)*-90px)) scale(calc(1 - var(--p,0)*.22));
+  opacity:calc(1 - var(--p,0)*1.5)}
+#top .aurora{transform:scale(calc(1 - var(--p,0)*.05));transform-origin:50% 100%;
+  opacity:calc(1 - var(--p,0)*.35)}
+.cue{position:absolute;left:50%;bottom:clamp(18px,3vw,40px);transform:translateX(-50%);z-index:3;
+  opacity:calc(1 - var(--p,0)*4)}
+.cue a{display:flex;align-items:center;justify-content:center;width:64px;height:64px;text-decoration:none;animation:bob 1.6s ease-in-out infinite}
+.cue svg{filter:url(#glass-sm)}
+@keyframes bob{0%,100%{transform:translateY(0);opacity:.75}50%{transform:translateY(8px);opacity:1}}
+.js .reveal{opacity:0;transform:translateY(34px);
+  transition:opacity .9s cubic-bezier(.2,.7,.2,1) var(--d,0s),transform .9s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+.js .reveal.in{opacity:1;transform:none}
+.js .aurora:not(.vis) .blob,.js .aurora:not(.vis) .sway{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.js .reveal{opacity:1;transform:none;transition:none}
+  #top .stage,#top .aurora,.cue{transform:none;opacity:1}.cue a{animation:none}html{scroll-behavior:auto}}
+
+.lite .cue svg{filter:url(#glass-lite)}
+.flatmark img{display:block;width:100%;height:100%;object-fit:contain}
+
+/* "Continue to timetable" pill on the landing page for a visitor who is already signed in */
+.resume{position:absolute;z-index:3;top:clamp(16px,2.4vw,40px);inset-inline-end:clamp(16px,2.4vw,40px);display:flex;align-items:center;gap:.7em;
+  padding:.7em 1.3em;border-radius:999px;background:var(--glass);box-shadow:var(--rim);color:var(--ink);text-decoration:none;
+  font-size:clamp(12px,1vw,18px);font-weight:700;transition:transform .2s,filter .2s}
+.resume:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.resume svg{width:1.4em;height:1.4em;transform:scaleX(-1)}
+.resume[dir=rtl] svg{transform:none}
+.resume[hidden]{display:none}   /* plain-HTML port: the pill is in the page but hidden until signed in */

@@ -1,0 +1,24 @@
+.stage{position:relative;z-index:1;perspective:1400px}
+.sway,.tilt{position:absolute;inset:0;transform-style:preserve-3d}
+.sway{animation:sway 9s ease-in-out infinite alternate}
+.tilt{transition:transform .25s ease-out}
+@keyframes sway{from{transform:rotateY(calc(var(--sy,16deg)*-1)) rotateX(var(--sx,6deg))}
+  to{transform:rotateY(var(--sy,16deg)) rotateX(calc(var(--sx,6deg)*-1))}}
+.layer,.sheen,.glow{position:absolute;inset:0;pointer-events:none}
+.layer{-webkit-mask:var(--edge) center/contain no-repeat;mask:var(--edge) center/contain no-repeat}
+.back,.sheen,.glow{-webkit-mask:var(--hd) center/contain no-repeat;mask:var(--hd) center/contain no-repeat}
+.face,.flat{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.face{filter:url(#glass)}
+.sheen{transform:translateZ(1.5px);background-size:300% 100%;animation:sweep 7s ease-in-out infinite;
+  background-image:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.75) 50%,transparent 62%)}
+@keyframes sweep{0%{background-position:0% 0}60%,100%{background-position:100% 0}}
+.glow{transform:translateZ(1px);background-size:220% 220%;animation:glow 11s ease-in-out infinite alternate;
+  background-image:radial-gradient(circle at 50% 50%,rgba(255,255,255,.5),rgba(255,255,255,0) 45%)}
+@keyframes glow{0%{background-position:0% 0%}33%{background-position:100% 20%}
+  66%{background-position:60% 100%}100%{background-position:0% 80%}}
+@media (prefers-reduced-motion:reduce){.sway,.sheen,.glow{animation:none}}
+/* lite mode: 6 depth layers, no sway, cheaper static glass filter */
+.lite .layer:not(.back):not(:nth-child(4n)){display:none}
+.lite .sway,.lite .sheen,.lite .glow{animation:none}
+.lite .tilt{transition:none}
+.lite .face{filter:url(#glass-lite)}

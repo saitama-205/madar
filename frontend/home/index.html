@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Madar · School timetable</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231c45d5'%3E%3Cpath d='M11 2.6c3.5 2.2 6.2 5.1 8.2 9-2 3.9-4.7 6.8-8.2 9-3.5-2.2-6.2-5.1-8.2-9 2-3.9 4.7-6.8 8.2-9z'/%3E%3Cpath d='M19.6 2.6l2 2-2 2-2-2z'/%3E%3C/svg%3E">
+  <!-- Signed-in admins only: anyone else goes back to the sign-in page before anything renders. -->
+  <script src="../services/session.js"></script>
+  <script>if (!Session.current()) location.replace("../#login");</script>
+  <link rel="stylesheet" href="../assets/css/fonts.css">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="aurora" aria-hidden="true">
+      <i class="b b1"></i><i class="b b2"></i><i class="b b3"></i><i class="b b4"></i><i class="b b5"></i>
+      <i class="b b6"></i><i class="b b7"></i><i class="b b8"></i><i class="b b9"></i>
+    </div>
+
+    <div class="topbar">
+      <a class="brand glass" href="../" title="Back to the start page (you stay signed in)">
+        <i class="brand-mark" aria-hidden="true"></i>
+        <span>MADAR</span>
+      </a>
+      <nav class="tabs glass" aria-label="Main">
+        <a href="#timetable" data-route="timetable">Timetable</a>
+        <a href="#data" data-route="data">Data</a>
+        <a href="#rules" data-route="rules">Rules</a>
+      </nav>
+      <div class="row">
+        <a class="docs glass" href="/docs" target="_blank" rel="noopener">API</a>
+        <button class="docs glass signout" id="signout" type="button">Sign out</button>
+      </div>
+    </div>
+
+    <div class="hero-cards" id="hero"></div>
+  </header>
+
+  <main class="page" id="page"></main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="../app.js"></script>
+</body>
+</html>

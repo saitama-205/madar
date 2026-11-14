@@ -1,0 +1,32 @@
+/* Animated gradient. Blobs oscillate AROUND their home position (the mockup composition).
+   .flip = vertically mirrored composition, used by the login banner (matches its mockup). */
+.aurora{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;isolation:isolate;background:linear-gradient(0deg,#9bcdfa 0%,#6ca6df 50%,#173fd4 100%)}
+.aurora.flip{background:linear-gradient(180deg,#9bcdfa 0%,#6ca6df 50%,#173fd4 100%)}
+.blobs{position:absolute;inset:0;z-index:0;pointer-events:none}
+.aurora.flip .blobs{transform:scaleY(-1)}
+.blob{position:absolute;border-radius:50%;filter:blur(85px);will-change:transform;
+  animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate}
+.b1{width:60%;height:70%;right:-15%;top:-25%;animation:d1 16s;animation-delay:-8s}
+.b2{width:40%;height:50%;right:-12%;top:30%;animation:d2 19s;animation-delay:-9.5s}
+.b3{width:55%;height:45%;left:22%;bottom:-25%;animation:d3 18s;animation-delay:-9s}
+.b4{width:38%;height:45%;right:-10%;bottom:-22%;animation:d4 21s;animation-delay:-10.5s}
+.b5{width:22%;height:25%;right:12%;bottom:-14%;animation:d5 15s;animation-delay:-7.5s}
+.b6{width:45%;height:55%;left:-12%;top:-22%;animation:d6 22s;animation-delay:-11s}
+.b7{width:40%;height:45%;left:-8%;top:30%;animation:d7 20s;animation-delay:-10s}
+.b8{width:50%;height:55%;left:28%;top:-28%;opacity:.8;animation:d8 18s;animation-delay:-9s}
+.b9{width:45%;height:50%;left:8%;bottom:-18%;animation:d9 21s;animation-delay:-10.5s}
+/* each: from = home - offset, to = home + offset  (animation-delay = -half duration starts at home) */
+@keyframes d1{from{transform:translate(15%,-12.5%) scale(.9)}to{transform:translate(-15%,12.5%) scale(1.1)}}
+@keyframes d2{from{transform:translate(22.5%,15%) scale(.85)}to{transform:translate(-22.5%,-15%) scale(1.15)}}
+@keyframes d3{from{transform:translate(-17.5%,12.5%) scale(.875)}to{transform:translate(17.5%,-12.5%) scale(1.125)}}
+@keyframes d4{from{transform:translate(20%,10%) scale(.925)}to{transform:translate(-20%,-10%) scale(1.075)}}
+@keyframes d5{from{transform:translate(60%,15%) scale(.75)}to{transform:translate(-60%,-15%) scale(1.25)}}
+@keyframes d6{from{transform:translate(-20%,-17.5%) scale(.9)}to{transform:translate(20%,17.5%) scale(1.1)}}
+@keyframes d7{from{transform:translate(-30%,20%) scale(.85)}to{transform:translate(30%,-20%) scale(1.15)}}
+@keyframes d8{from{transform:translate(27.5%,-20%) scale(.875)}to{transform:translate(-27.5%,20%) scale(1.125)}}
+@keyframes d9{from{transform:translate(-55%,17.5%) scale(.9)}to{transform:translate(55%,-17.5%) scale(1.1)}}
+/* lite mode (slow devices / reduced motion): fewer, cheaper blobs */
+.lite .blob{filter:blur(40px)}
+.lite .blob:nth-child(n+5){display:none}
+@media (prefers-reduced-motion:reduce){.blob{animation:none}}

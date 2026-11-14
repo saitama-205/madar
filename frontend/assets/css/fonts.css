@@ -1,0 +1,7 @@
+/* Self-hosted fonts, shared by every page. Cascadia Code for Latin, IBM Plex Sans Arabic for Arabic. */
+@font-face{font-family:"IBM Plex Sans Arabic";font-weight:400;font-display:swap;src:url(../fonts/plex-arabic-400.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0898-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+FB50-FDFF,U+FE70-FEFC}
+@font-face{font-family:"IBM Plex Sans Arabic";font-weight:700;font-display:swap;src:url(../fonts/plex-arabic-700.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+0870-088E,U+0890-0891,U+0898-08E1,U+08E3-08FF,U+200C-200E,U+2010-2011,U+FB50-FDFF,U+FE70-FEFC}
+@font-face{font-family:"Cascadia Code";font-weight:400;font-display:swap;
+  src:local("Cascadia Code"),local("CascadiaCode-Regular"),url(../fonts/cascadia-400.woff2) format("woff2")}
+@font-face{font-family:"Cascadia Code";font-weight:700;font-display:swap;
+  src:local("Cascadia Code Bold"),local("CascadiaCode-Bold"),url(../fonts/cascadia-700.woff2) format("woff2")}
