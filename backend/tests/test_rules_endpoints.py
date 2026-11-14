@@ -105,7 +105,7 @@ def test_duplicate_rule_is_a_conflict(api):
 def test_delete_a_rule(api):
     rule_id = api.get("/api/rules").json()[0]["id"]
     r = api.delete(f"/api/rules/{rule_id}")
-    assert r.status_code == 200 and r.json() == {"ok": True}
+    assert r.status_code == 200 and r.json()["ok"] is True
     assert rule_id not in [x["id"] for x in api.get("/api/rules").json()]
     assert len(api.get("/api/rules").json()) == 79
 

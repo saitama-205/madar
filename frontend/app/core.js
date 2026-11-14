@@ -117,17 +117,40 @@ export const ICON = {
   moon: svg('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>'),
   upload: svg('<path d="M12 15.5V4M7 8.5l5-5 5 5M4.5 15v3.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V15"/>'),
   download: svg('<path d="M12 4v11.5M7 10.5l5 5 5-5M4.5 15v3.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V15"/>'),
+  pencil: svg('<path d="M4 20l1-4.2L16.6 4.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.2 19 4 20z"/><path d="M14.5 6.3l3.2 3.2"/>'),
   send: svg('<path d="M4 12l16-7-6 16-2.5-6.5L4 12z"/>'),
 };
 
 // ---------- feedback ----------
 let toastTimer;
-export function toast(text, isError = false) {
+// kind: false/"ok" (dark), true/"err" (red), "warn" (yellow). sticky: stays until the next toast.
+export function toast(text, kind = false, sticky = false) {
   const el = $("#toast");
+  const k = kind === true ? "err" : kind || "";
   el.textContent = text;
-  el.className = "toast show" + (isError ? " err" : "");
+  el.className = "toast show" + (k ? " " + k : "");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.className = "toast"), 4000);
+  if (!sticky) toastTimer = setTimeout(() => (el.className = "toast"), k === "warn" ? 9000 : 4000);
+}
+
+// Every change on the server regenerates the timetable by itself (the response has generated / violations / warnings).
+// updating(work): show "Updating timetable…" while work() runs, then "Timetable updated" (yellow when there is
+// something to know: classes skipped, rule problems) or the reason it could not be rebuilt.
+export function reportUpdate(r) {
+  if (!r || r.generated === undefined) return r;
+  if (r.generated) {
+    markGenerated();
+    const notes = [...(r.warnings || []), ...(r.violations || [])];
+    toast(notes.length ? `${t("tt_updated")}: ${notes.slice(0, 3).join(" ")}` : t("tt_updated"), notes.length ? "warn" : false);
+  } else {
+    toast(t("tt_not_updated", { msg: (r.warnings || [])[0] || "" }), "warn");
+  }
+  return r;
+}
+export async function updating(work) {
+  toast(t("updating"), "warn", true);
+  try { return reportUpdate(await work()); }
+  catch (e) { toast(e.message, true); throw e; }
 }
 export async function busy(button, work) {
   button.disabled = true;
@@ -170,6 +193,32 @@ export function teacherMatches(q) {
   const f = fold(q).trim();
   return state.teachers.filter((x) => !f || fold(x.name).includes(f));
 }
+// Typo-tolerant: names within a small edit distance of the query (any word of the name, or its start). Best first.
+function lev(a, b) {
+  const row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = row[0]; row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cur = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+  }
+  return row[b.length];
+}
+export function fuzzyTeachers(q, limit = 5) {
+  const f = fold(q).trim();
+  if (!f) return [];
+  const max = Math.max(1, Math.floor(f.length / 3));
+  const scored = [];
+  for (const x of state.teachers) {
+    const name = fold(x.name);
+    let best = lev(f, name.slice(0, f.length));
+    for (const tok of name.split(/\s+/).filter(Boolean)) best = Math.min(best, lev(f, tok), lev(f, tok.slice(0, f.length)));
+    if (best <= max) scored.push([best, x]);
+  }
+  return scored.sort((a, b) => a[0] - b[0]).slice(0, limit).map((s) => s[1]);
+}
 let acSeq = 0;
 // host: an element to fill. Returns { id() -> number|null, set(id), clear() }.
 export function teacherPicker(host, { label, id = null, placeholder = "", onPick = () => {} } = {}) {
@@ -182,11 +231,13 @@ export function teacherPicker(host, { label, id = null, placeholder = "", onPick
   let picked = null, shown = [], active = -1;
   const close = () => { list.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; };
   const choose = (x) => { picked = x.id; input.value = x.name; close(); onPick(x.id); };
-  const mark = () => list.querySelectorAll("li").forEach((li, i) => li.classList.toggle("on", i === active));
+  const mark = () => list.querySelectorAll("li[data-i]").forEach((li, i) => li.classList.toggle("on", i === active));
   function open() {
     shown = teacherMatches(input.value).slice(0, 30);
-    list.innerHTML = shown.length ? shown.map((x, i) => `<li role="option" data-i="${i}"><bdi>${esc(x.name)}</bdi><small>${esc(subjectName(x.subject_id))}</small></li>`).join("")
-      : `<li class="none" role="presentation">${esc(t("ac_none"))}</li>`;
+    let head = "";
+    if (!shown.length && input.value.trim()) { shown = fuzzyTeachers(input.value); head = shown.length ? `<li class="none" role="presentation">${esc(t("ac_didyou"))}</li>` : ""; }
+    const items = shown.map((x, i) => `<li role="option" data-i="${i}"><bdi>${esc(x.name)}</bdi><small>${esc(subjectName(x.subject_id))}</small></li>`).join("");
+    list.innerHTML = shown.length ? head + items : `<li class="none" role="presentation">${esc(t("ac_none"))}</li>`;
     list.hidden = false; input.setAttribute("aria-expanded", "true"); active = -1;
   }
   input.addEventListener("input", () => { picked = null; onPick(null); open(); });
@@ -199,7 +250,7 @@ export function teacherPicker(host, { label, id = null, placeholder = "", onPick
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault(); if (list.hidden) open();
-      if (shown.length) { active = (active + (e.key === "ArrowDown" ? 1 : -1) + shown.length) % shown.length; mark(); list.children[active]?.scrollIntoView({ block: "nearest" }); }
+      if (shown.length) { active = (active + (e.key === "ArrowDown" ? 1 : -1) + shown.length) % shown.length; mark(); list.querySelectorAll("li[data-i]")[active]?.scrollIntoView({ block: "nearest" }); }
     } else if (e.key === "Enter" && !list.hidden && shown.length && active >= 0) { e.preventDefault(); choose(shown[active]); }
     else if (e.key === "Enter" && !list.hidden && shown.length === 1) { e.preventDefault(); choose(shown[0]); }
     else if (e.key === "Escape") close();
@@ -209,6 +260,7 @@ export function teacherPicker(host, { label, id = null, placeholder = "", onPick
     set(tid) { const x = byId(state.teachers, tid); picked = x ? x.id : null; input.value = x ? x.name : ""; close(); },
     clear() { picked = null; input.value = ""; close(); },
     focus: () => input.focus(),
+    text: () => input.value,
   };
   if (id != null) api_.set(id);
   return api_;

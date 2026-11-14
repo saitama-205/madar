@@ -25,8 +25,7 @@ function heroCards() {
     <div class="card glass stat"><div class="stat-label">${esc(t("stat_updated"))}</div><div class="stat val">${esc(updated)}</div></div>`;
 }
 
-const statusMsg = () => !state.generated ? msg("warn", esc(t("st_none")))
-  : isStale() ? msg("warn", esc(t("st_stale"))) : msg("ok", esc(t("st_ok")));
+const statusMsg = () => !state.generated ? msg("warn", esc(t("st_none"))) : msg("ok", esc(t("st_ok")));
 
 export async function render() {
   heroCards();
@@ -42,7 +41,7 @@ export async function render() {
         <h2>${esc(t("sched_title"))}</h2>
         <div class="row"><span class="hint">${esc(t("sched_hint"))}</span>
           <button class="btn secondary" id="to-import">${ICON.upload}<span>${esc(t("import_upload"))}</span></button>
-          <button class="btn" id="generate">${esc(state.generated ? t("regenerate") : t("generate"))}</button></div>
+          ${state.generated ? "" : `<button class="btn" id="generate">${esc(t("generate"))}</button>`}</div>
       </div>
       <div id="gen-status">${statusMsg()}</div>
       <div class="row controls">
@@ -55,7 +54,7 @@ export async function render() {
       <div class="legend">${state.subjects.map((s) => subjectChip(s.id)).join("")}</div>
     </section>`;
 
-  $("#generate").onclick = async (e) => {
+  if ($("#generate")) $("#generate").onclick = async (e) => {
     const b = e.currentTarget; b.disabled = true;
     $("#gen-status").innerHTML = msg("warn", esc(t("generating")));
     try {
@@ -63,7 +62,7 @@ export async function render() {
       $("#gen-status").innerHTML = r.warnings?.length
         ? msg("warn", `<div><b>${esc(t("built", { n: r.lessons_count, s: r.seconds }))}</b>${warnList(r.warnings)}</div>`)
         : msg("ok", esc(t("built", { n: r.lessons_count, s: r.seconds })));
-      b.textContent = t("regenerate");
+      b.remove();
       heroCards(); await drawGrid();
     } catch (err) { $("#gen-status").innerHTML = msg("err", esc(err.message)); }
     finally { b.disabled = false; }

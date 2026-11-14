@@ -7,14 +7,17 @@ from pydantic import BaseModel, Field
 
 from errors import ApiError
 from routes_school import get_db
+from regen import regenerate
 from rule_params import parse_params
 
 router = APIRouter(prefix="/api")
 
 
 class RuleIn(BaseModel):
-    kind: str
-    params: dict
+    """One rule ({kind, params}) or several saved together ({rules: [{kind, params}, ..]}, e.g. the two pins of a swap)."""
+    kind: str | None = None
+    params: dict | None = None
+    rules: list[dict] | None = Field(default=None, max_length=10)
     source_text: str | None = Field(default=None, max_length=500)
 
 
@@ -62,25 +65,48 @@ def list_rules(db: sqlite3.Connection = Depends(get_db)):
     return [rule_dict(r) for r in db.execute("SELECT id, kind, params, source_text FROM rules ORDER BY id")]
 
 
-@router.post("/rules", status_code=201)
-def create_rule(body: RuleIn, db: sqlite3.Connection = Depends(get_db)):
-    """Save a rule. It is used the next time the timetable is generated (the current one is not changed)."""
+def _validated(db: sqlite3.Connection, kind, params) -> dict:
     try:
-        p = parse_params(body.kind, body.params)
+        p = parse_params(kind or "", params)
     except ValueError as why:
         raise invalid(f"The rule is not valid: {why}")
-    check_things_exist(db, body.kind, p)
+    check_things_exist(db, kind, p)
+    return p.model_dump()
 
-    params = p.model_dump()
-    for other in db.execute("SELECT params FROM rules WHERE kind = ?", (body.kind,)):
-        if json.loads(other["params"]) == params:
-            raise ApiError(409, "duplicate_rule", "That rule is already saved.")
 
+@router.post("/rules", status_code=201)
+def create_rule(body: RuleIn, db: sqlite3.Connection = Depends(get_db)):
+    """Save a rule, then regenerate the timetable (see regen.py). The response is the saved rule plus
+    {generated, violations, warnings}. Send {"rules": [..]} to save several in one go (all or none)."""
     source_text = (body.source_text or "").strip() or None
+    if body.rules is not None:
+        if not body.rules:
+            raise invalid("rules must not be empty.")
+        items = [(r.get("kind"), r.get("params")) for r in body.rules]
+    elif body.kind is not None:
+        items = [(body.kind, body.params)]
+    else:
+        raise invalid("Send either kind and params, or a list of rules.")
+
+    checked = [(kind, _validated(db, kind, params)) for kind, params in items]
+    if body.rules is None:
+        for other in db.execute("SELECT params FROM rules WHERE kind = ?", (checked[0][0],)):
+            if json.loads(other["params"]) == checked[0][1]:
+                raise ApiError(409, "duplicate_rule", "That rule is already saved.")
+
+    saved = []
     with db:
-        new_id = db.execute("INSERT INTO rules (kind, params, source_text) VALUES (?, ?, ?)",
-                            (body.kind, json.dumps(params), source_text)).lastrowid
-    return {"id": new_id, "kind": body.kind, "params": params, "source_text": source_text}
+        for kind, params in checked:
+            exists = any(json.loads(o["params"]) == params for o in db.execute("SELECT params FROM rules WHERE kind = ?", (kind,)))
+            if exists:      # saving a swap twice (or half of it) must not fail on the part that is already there
+                continue
+            new_id = db.execute("INSERT INTO rules (kind, params, source_text) VALUES (?, ?, ?)",
+                                (kind, json.dumps(params), source_text)).lastrowid
+            saved.append({"id": new_id, "kind": kind, "params": params, "source_text": source_text})
+    outcome = regenerate(db)
+    if body.rules is None:
+        return {**saved[0], **outcome}
+    return {"rules": saved, **outcome}
 
 
 @router.delete("/rules/{rule_id}")
@@ -89,4 +115,4 @@ def delete_rule(rule_id: int, db: sqlite3.Connection = Depends(get_db)):
         deleted = db.execute("DELETE FROM rules WHERE id = ?", (rule_id,)).rowcount
     if not deleted:
         raise ApiError(404, "not_found", f"There is no rule with id {rule_id}.")
-    return {"ok": True}
+    return {"ok": True, **regenerate(db)}

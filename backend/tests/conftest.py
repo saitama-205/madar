@@ -14,6 +14,13 @@ def no_background_generation(monkeypatch):
     monkeypatch.setenv("MADAR_AUTO_GENERATE", "0")
 
 
+@pytest.fixture(autouse=True)
+def no_auto_regenerate(monkeypatch):
+    """Endpoints that change data regenerate the timetable (regen.py), which takes seconds on the real school.
+    Off by default in tests; tests of that behaviour turn it on and fake the solver."""
+    monkeypatch.setenv("MADAR_AUTO_REGENERATE", "0")
+
+
 @pytest.fixture()
 def conn(tmp_path, monkeypatch):
     """An empty database in a temp folder (never touches database/madar.db)."""

@@ -334,3 +334,27 @@ details.manual .btn { margin-top: 12px; }
   .grid-box, .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .panel { padding-inline: 14px; }
 }
+
+.toast.warn { background: #fff1c2; color: #3a2b00; box-shadow: inset 0 0 0 1.5px var(--warn); border-radius: 18px; text-align: center; }
+
+.chips.ex { margin-top: 10px; }
+.chips.ex .chip { text-align: start; white-space: normal; line-height: 1.35; padding-block: .45em; }
+
+.hin { width: 3.4em; padding: .35em .3em; text-align: center; font-size: 1em; border-radius: 10px; border: 1.5px solid var(--rim); background: var(--field); color: var(--ink); }
+.total.bad { color: var(--err); font-weight: 700; }
+.hact { white-space: nowrap; }
+.icon-btn svg { width: 1.1em; height: 1.1em; }
+@media (max-width: 480px) { .hin { width: 3em; font-size: 16px; min-height: 40px; } .hact { display: grid; gap: 6px; } }
+
+.seg + .help { margin-top: 8px; }
+.daychip { cursor: pointer; user-select: none; min-height: 40px; }
+.daychip input { position: absolute; opacity: 0; pointer-events: none; }
+.daychip.on { background: var(--royal, #3a5bd9); color: #fff; }
+fieldset.cover { border: 0; margin: 14px 0 0; padding: 0; min-width: 0; }
+fieldset.cover legend { padding: 0; }
+.pickrow { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; padding: 6px 0; }
+.pickrow input { margin-top: .35em; width: 1.2em; height: 1.2em; flex: none; }
+.help.block { display: block; }
+.bad { color: var(--err); }
+#who-pick .chips, .days .chips { margin-top: 6px; }
+@media (max-width: 480px) { .seg { display: grid; grid-template-columns: 1fr 1fr; } .seg button { min-height: 44px; } }
