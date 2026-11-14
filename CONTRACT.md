@@ -39,7 +39,7 @@ Madar is an AI-assisted school timetable app for an elementary school in Kuwait
 - **Days:** `0`=Sunday, `1`=Monday, `2`=Tuesday, `3`=Wednesday, `4`=Thursday
 - **Periods:** `1` to `7` (1-based)
 - **Class name:** `"section/grade"`, e.g. `"2/5"` = section 2 of grade 5. Grades 1–5, sections 1–4
-- All API paths start with `/api`. All requests and responses are JSON
+- All API paths start with `/api`. All requests and responses are JSON (only exceptions: the `.xlsx` template download and the `.xlsx` upload in the import endpoints)
 - Errors return `{ "error": "short_code", "message": "human sentence" }` with a 4xx/5xx status
 - Secrets (AI key) go in `.env`, never in the code or on GitHub
 
@@ -77,6 +77,9 @@ The database owner (saitama-205) provides `database/schema.sql`, `database/seed.
 | POST | `/api/rules` | `{ "kind", "params", "source_text" }` | the saved rule |
 | DELETE | `/api/rules/{id}` | – | `{ "ok": true }` |
 | POST | `/api/reset` | – | `{ "ok": true }`. Wipes **all** tables (lessons, rules, added teachers/classes) and reloads the original school data from `database/seed.py` |
+| GET | `/api/import/template` | – | Downloads `madar_template.xlsx` (a file, not JSON) with 3 sheets: **Classes**, **Subjects and hours**, **Teachers** (columns below) |
+| POST | `/api/import` | an `.xlsx` file (multipart form field `file`) | A **preview, nothing is saved**: `{ "classes": [{ "name", "grade" }], "teachers": [{ "name", "subject", "classes": ["1/1", ..] }], "subject_hours": [{ "grade", "subject", "subject_ar", "per_week" }], "warnings": ["human sentence", ..] }` |
+| POST | `/api/import/confirm` | `{ "classes", "teachers", "subject_hours" }` (the preview, edited or not; `warnings` not needed) | `{ "ok": true }`. Saves into the database and **replaces all current data** (including lessons and rules), then run Generate |
 | POST | `/api/rules/parse` *(stretch)* | `{ "text": "PE never in period 7" }` | `{ "kind", "params", "explanation" }` (preview, not saved) |
 | POST | `/api/absences` *(stretch)* | `{ "teacher_id", "day" }` | `[{ "day", "period", "class", "substitutes": [{ "teacher_id", "name" }] }]` |
 
@@ -85,7 +88,14 @@ The database owner (saitama-205) provides `database/schema.sql`, `database/seed.
 { "class_id": 1, "class": "1/1", "teacher_id": 4, "teacher": "Name", "subject_id": 2, "subject": "Math", "day": 0, "period": 1 }
 ```
 
+**Import (.xlsx) details:**
+- Template sheets and columns: **Classes** `Class` (e.g. `1/1`) · **Subjects and hours** `Subject`, `Arabic name`, `Grade 1` … `Grade 5` (lessons per week) · **Teachers** `Teacher`, `Subject`, `Classes` (comma-separated, e.g. `1/1, 2/1`).
+- The preview refers to subjects and classes by **name** (nothing is saved yet, so there are no ids). Confirm checks the data again before saving; if it is invalid nothing is changed.
+- A file that cannot be read (wrong type, missing sheet or column) returns `400` with error `invalid_file`. Problems in the data that do not stop the import (e.g. a teacher with no classes, a class name that does not exist) are listed in `warnings`.
+
 ## Hard rules the solver must keep
+
+**The solver only ever reads the database.** It never reads uploaded files and never calls the AI. Imports and AI-made rules are saved into the database first (after the user has seen the preview); Generate then works only from the tables above.
 
 1. Every class has exactly one lesson in every slot (5 × 7 = 35 per week, no free periods)
 2. A teacher is never in two places at once
