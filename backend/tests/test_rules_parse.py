@@ -95,3 +95,49 @@ def test_prompt_has_only_short_teacher_names(api, ai):
 
 def test_empty_text_is_422(api, ai):
     assert parse(api, "   ").status_code == 422
+
+
+# ---------- "move a lesson" (becomes a pin_lesson at the target slot) ----------
+
+@pytest.fixture()
+def timetable(api):
+    api.db.execute("DELETE FROM lessons")
+    cls = api.db.execute("SELECT id FROM classes WHERE name = '1/1'").fetchone()[0]  # 1/1 has Math on Sunday period 1
+    tid = api.db.execute("SELECT id FROM teachers WHERE subject_id = 4 LIMIT 1").fetchone()[0]
+    api.db.execute("INSERT INTO lessons (class_id, teacher_id, subject_id, day, period) VALUES (?, ?, 4, 0, 1)", (cls, tid))
+    api.db.commit()
+    return cls
+
+
+def test_move_lesson_becomes_pin_at_target(api, ai, timetable):
+    ai.answer = {"kind": "move_lesson", "class": "1/1", "from_day": "Sunday", "from_period": 1,
+                 "to_day": "Monday", "to_period": 1}
+    r = parse(api, "Move class 1/1 Sunday period 1 to Monday period 1")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["kind"] == "pin_lesson"
+    assert body["params"] == {"class_id": timetable, "subject_id": 4, "day": 1, "period": 1}
+    assert "Math" in body["explanation"] and "Sunday period 1" in body["explanation"] and "Monday period 1" in body["explanation"]
+
+
+def test_move_lesson_arabic_values(api, ai, timetable):
+    ai.answer = {"kind": "move_lesson", "class": "١/١", "from_day": "الأحد", "from_period": "١",
+                 "to_day": "الاثنين", "to_period": "٢"}
+    r = parse(api, "انقل حصة الصف 1/1 من الأحد الحصة 1 إلى الاثنين الحصة 2")
+    assert r.status_code == 200 and r.json()["params"]["day"] == 1 and r.json()["params"]["period"] == 2
+    assert "الرياضيات" in r.json()["explanation"]
+
+
+def test_move_lesson_errors(api, ai, timetable):
+    base = {"kind": "move_lesson", "class": "1/1", "from_day": "Sunday", "from_period": 1, "to_day": "Monday", "to_period": 1}
+    ai.answer = {**base, "from_period": 4}  # class has no lesson there
+    assert parse(api, "x").status_code == 422
+    ai.answer = {**base, "to_day": "Sunday", "to_period": 1}  # same slot
+    assert parse(api, "x").status_code == 422
+    ai.answer = {**base, "to_day": "Friday"}
+    assert parse(api, "x").status_code == 422
+    api.db.execute("DELETE FROM lessons")
+    api.db.commit()
+    ai.answer = base
+    r = parse(api, "x")
+    assert r.status_code == 409 and r.json()["error"] == "no_timetable"

@@ -13,7 +13,7 @@ from rule_params import parse_params
 from routes_rules import check_things_exist
 
 HELP = ("I can turn a request into one rule at a time: a subject never in one period, a teacher unavailable in one "
-        "period of one day, or a lesson fixed in a class at one day and period.")
+        "period of one day, a lesson fixed in a class at one day and period, or a lesson moved to another day and period.")
 
 PROMPT = """You convert ONE school scheduling request (English or Arabic) into a JSON object. Output ONLY the JSON.
 
@@ -24,6 +24,9 @@ Rule kinds (pick exactly one):
    One teacher cannot teach in that one period of that one day.
 3) {{"kind": "pin_lesson", "class": "<class name>", "subject": "<subject>", "day": "<day>", "period": <1-7>}}
    That class always has that subject at that day and period.
+4) {{"kind": "move_lesson", "class": "<class name>", "from_day": "<day>", "from_period": <1-7>, "to_day": "<day>", "to_period": <1-7>}}
+   Move the lesson that class has now at the first slot to the second slot (e.g. "Move class 1/1 Sunday period 1 to
+   Monday period 1").
 
 Subjects (use the English name): {subjects}
 Days: Sunday, Monday, Tuesday, Wednesday, Thursday. Periods: 1 to 7.
@@ -56,19 +59,20 @@ def _friendly(reason) -> str:
     return HELP if not text or re.search(r"json|schema|shape", text, re.IGNORECASE) else text
 
 
-def to_params(db: sqlite3.Connection, raw: dict, teacher_ids: set[int]) -> tuple[str, dict]:
-    """Normalize the AI's form into (kind, params). Raises cannot_parse when a value is not understood."""
+def to_params(db: sqlite3.Connection, raw: dict, teacher_ids: set[int]) -> tuple[str, dict, dict | None]:
+    """Normalize the AI's form into (kind, params, moved_from). A "move" becomes a pin_lesson at the target slot
+    (moved_from says where the lesson is now); every other kind has moved_from None. Raises cannot_parse."""
     kind = raw.get("kind")
     subjects = db.execute("SELECT id, name, name_ar FROM subjects").fetchall()
 
-    def need_period():
-        p = normalize.period(raw.get("period"))
+    def need_period(field="period"):
+        p = normalize.period(raw.get(field))
         if p is None:
             raise _cannot("The period must be a number from 1 to 7.")
         return p
 
-    def need_day():
-        d = normalize.day(raw.get("day"))
+    def need_day(field="day"):
+        d = normalize.day(raw.get(field))
         if d is None:
             raise _cannot("The day must be one of Sunday to Thursday.")
         return d
@@ -80,22 +84,38 @@ def to_params(db: sqlite3.Connection, raw: dict, teacher_ids: set[int]) -> tuple
         return sid
 
     if kind == "subject_not_in_period":
-        return kind, {"subject_id": need_subject(), "period": need_period()}
+        return kind, {"subject_id": need_subject(), "period": need_period()}, None
     if kind == "teacher_unavailable":
         tid = normalize.number(raw.get("teacher_id"))
         if tid not in teacher_ids:
             raise _cannot("I could not tell which teacher you mean. Please check the name.")
-        return kind, {"teacher_id": tid, "day": need_day(), "period": need_period()}
+        return kind, {"teacher_id": tid, "day": need_day(), "period": need_period()}, None
     if kind == "pin_lesson":
         name = normalize.class_name(raw.get("class"))
         row = db.execute("SELECT id FROM classes WHERE name = ?", (name,)).fetchone() if name else None
         if row is None:
             raise _cannot("I could not find that class. Classes are written like 2/5 (section/grade).")
-        return kind, {"class_id": row["id"], "subject_id": need_subject(), "day": need_day(), "period": need_period()}
+        return kind, {"class_id": row["id"], "subject_id": need_subject(), "day": need_day(), "period": need_period()}, None
+    if kind == "move_lesson":
+        name = normalize.class_name(raw.get("class"))
+        row = db.execute("SELECT id FROM classes WHERE name = ?", (name,)).fetchone() if name else None
+        if row is None:
+            raise _cannot("I could not find that class. Classes are written like 2/5 (section/grade).")
+        src = {"day": need_day("from_day"), "period": need_period("from_period")}
+        dst = {"day": need_day("to_day"), "period": need_period("to_period")}
+        if src == dst:
+            raise _cannot("The lesson is already in that slot.")
+        if db.execute("SELECT 1 FROM lessons LIMIT 1").fetchone() is None:
+            raise ApiError(409, "no_timetable", "There is no timetable yet, so there is no lesson to move. Generate one first.")
+        lesson = db.execute("SELECT subject_id FROM lessons WHERE class_id = ? AND day = ? AND period = ?",
+                            (row["id"], src["day"], src["period"])).fetchone()
+        if lesson is None:
+            raise _cannot(f"Class {name} has no lesson on that day and period, so there is nothing to move.")
+        return "pin_lesson", {"class_id": row["id"], "subject_id": lesson["subject_id"], **dst}, src
     raise _cannot(HELP)
 
 
-def explain(db: sqlite3.Connection, kind: str, params: dict, arabic: bool) -> str:
+def explain(db: sqlite3.Connection, kind: str, params: dict, arabic: bool, moved_from: dict | None = None) -> str:
     """The sentence shown in the preview, written by code from the validated params (so it cannot misstate them)."""
     def subject(i):
         r = db.execute("SELECT name, name_ar FROM subjects WHERE id = ?", (i,)).fetchone()
@@ -113,6 +133,10 @@ def explain(db: sqlite3.Connection, kind: str, params: dict, arabic: bool) -> st
         return f"{t} غير متاحة يوم {d} في الحصة {p}." if arabic else f"{t} will not teach on {d} in period {p}."
     c = db.execute("SELECT name FROM classes WHERE id = ?", (params["class_id"],)).fetchone()["name"]
     s, d, p = subject(params["subject_id"]), day(params["day"]), params["period"]
+    if moved_from:
+        fd, fp = day(moved_from["day"]), moved_from["period"]
+        return (f"سيتم نقل {s} للصف {c} من يوم {fd} الحصة {fp} إلى يوم {d} الحصة {p} عند إعادة إنشاء الجدول." if arabic
+                else f"{s} for class {c} will move from {fd} period {fp} to {d} period {p} when the timetable is regenerated.")
     return (f"الصف {c} سيكون عنده {s} يوم {d} في الحصة {p}." if arabic
             else f"Class {c} will always have {s} on {d} in period {p}.")
 
@@ -131,7 +155,7 @@ def parse_rule_text(db: sqlite3.Connection, text: str) -> dict:
     if "error" in raw:
         raise _cannot(_friendly(raw["error"]))
 
-    kind, params = to_params(db, raw, teacher_ids)
+    kind, params, moved_from = to_params(db, raw, teacher_ids)
     try:
         validated = parse_params(kind, params)
     except ValueError as why:
@@ -139,4 +163,4 @@ def parse_rule_text(db: sqlite3.Connection, text: str) -> dict:
     check_things_exist(db, kind, validated)
     params = validated.model_dump()
     arabic = bool(re.search("[؀-ۿ]", text))
-    return {"kind": kind, "params": params, "explanation": explain(db, kind, params, arabic)}
+    return {"kind": kind, "params": params, "explanation": explain(db, kind, params, arabic, moved_from)}

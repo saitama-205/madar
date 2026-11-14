@@ -1,5 +1,6 @@
 """POST /api/absences: which lessons an absent teacher leaves uncovered, and who could cover each one."""
 import sqlite3
+from typing import Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -16,6 +17,8 @@ router = APIRouter(prefix="/api")
 class AbsenceIn(BaseModel):
     teacher_id: int
     day: int = Field(ge=0, le=4)
+    lang: Literal["en", "ar"] | None = None  # the UI language; the explanation sentence is written in it (default "en")
+    language: Literal["en", "ar"] | None = None  # older name for the same thing; "lang" wins if both are sent
 
 
 @router.post("/absences")
@@ -29,15 +32,16 @@ def absences(body: AbsenceIn, db: sqlite3.Connection = Depends(get_db)):
         raise ApiError(409, "no_timetable", "There is no timetable yet. Generate one first.")
 
     result = find_affected(db, body.teacher_id, body.day)
+    lang = body.lang or body.language or "en"
     ai_ok = llm.is_configured()
     for item in result:
         top = item["substitutes"][0] if item["substitutes"] else None
         if top is None:
             item["explanation"], item["explanation_source"] = None, None
         elif ai_ok:
-            item["explanation"], item["explanation_source"] = explain_pick(teacher["name"], item, top)
+            item["explanation"], item["explanation_source"] = explain_pick(teacher["name"], item, top, lang)
             if item["explanation_source"] == "template":
                 ai_ok = False  # the AI just failed: do not wait for it again for every other lesson
         else:
-            item["explanation"], item["explanation_source"] = template_sentence(item, top), "template"
+            item["explanation"], item["explanation_source"] = template_sentence(item, top, lang), "template"
     return result

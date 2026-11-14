@@ -58,12 +58,16 @@ def compute(db: sqlite3.Connection) -> dict:
     class_load = [{"class_id": c["id"], "class": c["name"], "per_day": _per_day([l["day"] for l in by_class[c["id"]]])}
                   for c in classes]
 
+    # A class with no lessons at all was not scheduled (e.g. just added, or skipped for a missing teacher). That is
+    # reported in "unscheduled_classes" instead of as dozens of "slot is empty" violations.
+    unscheduled = [c["name"] for c in classes if not by_class[c["id"]]]
     violations = _rule_violations(db, lessons, teachers, classes)
     shown = violations[:MAX_VIOLATIONS]
     if len(violations) > MAX_VIOLATIONS:
         shown.append(f"... and {len(violations) - MAX_VIOLATIONS} more.")
     return {"teacher_load": teacher_load, "teacher_gaps": teacher_gaps, "hard_subjects_by_period": hard,
-            "class_load": class_load, "rule_check": {"ok": not violations, "violations": shown}}
+            "class_load": class_load, "unscheduled_classes": unscheduled,
+            "rule_check": {"ok": not violations, "violations": shown}}
 
 
 def _rule_violations(db, lessons, teachers, classes) -> list[str]:
@@ -73,11 +77,14 @@ def _rule_violations(db, lessons, teachers, classes) -> list[str]:
     subject_name = {r["id"]: r["name"] for r in db.execute("SELECT id, name FROM subjects")}
     day = lambda d: DAYS[d]
 
+    has_lessons = {l["class_id"] for l in lessons}
+    scheduled = [c for c in classes if c["id"] in has_lessons]
+
     # 1. every class has exactly one lesson in every slot
     slot_count: dict[tuple, int] = {}
     for l in lessons:
         slot_count[l["class_id"], l["day"], l["period"]] = slot_count.get((l["class_id"], l["day"], l["period"]), 0) + 1
-    for c in classes:
+    for c in scheduled:
         for d in range(5):
             for p in range(1, 8):
                 n = slot_count.get((c["id"], d, p), 0)
@@ -97,7 +104,7 @@ def _rule_violations(db, lessons, teachers, classes) -> list[str]:
     have: dict[tuple, int] = {}
     for l in lessons:
         have[l["class_id"], l["subject_id"]] = have.get((l["class_id"], l["subject_id"]), 0) + 1
-    for c in classes:
+    for c in scheduled:
         for sid, name in subject_name.items():
             w, h = want.get((c["grade"], sid), 0), have.get((c["id"], sid), 0)
             if w != h:

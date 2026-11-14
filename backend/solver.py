@@ -70,6 +70,8 @@ class Problem:
         self.subject_not_in = defaultdict(set)  # subject_id -> {periods}
         self.unavailable = defaultdict(set)  # teacher_id -> {(day, period)}
         self.pins = []  # (class_id, subject_id, day, period)
+        self.warnings = []  # human sentences returned by Generate (e.g. skipped classes)
+        self.skipped = set()  # class ids left out because a teacher is missing
 
     # ----- checks that give a clear message instead of a silent "impossible" -----
 
@@ -88,11 +90,16 @@ class Problem:
                 raise ApiError(422, "multiple_teachers", f"Class {self.classes[cid][0]} has more than one teacher for "
                                                          f"{self.subjects[sid]}. A class needs exactly one per subject.")
             if not teachers:
-                missing[self.classes[cid][0]].append(self.subjects[sid])
-        if missing:
-            parts = [f"Class {name} has no teacher for {_some(subjects, 5)}" for name, subjects in missing.items()]
-            raise ApiError(422, "missing_teachers", "Cannot generate. " + "; ".join(parts[:3])
-                           + (f"; and {len(parts) - 3} more classes" if len(parts) > 3 else "") + ".")
+                missing[cid].append(self.subjects[sid])
+        # A class with a missing teacher is skipped (and reported in warnings) instead of failing the whole school.
+        for cid, subjects in missing.items():
+            self.warnings.append(f"Class {self.classes[cid][0]} was skipped: it has no teacher for {_some(subjects, 5)}.")
+            self.skipped.add(cid)
+        for cid in self.skipped:
+            del self.classes[cid]
+        self.needed = {k: h for k, h in self.needed.items() if k[0] not in self.skipped}
+        if not self.classes:
+            raise ApiError(422, "missing_teachers", "Cannot generate. " + " ".join(self.warnings))
 
     def parse_rules(self):
         for r in self.rules:
@@ -111,6 +118,8 @@ class Problem:
                     raise bad("that teacher does not exist.")
                 self.unavailable[p.teacher_id].add((p.day, p.period))
             else:  # pin_lesson
+                if p.class_id in self.skipped:
+                    continue  # that class is not being scheduled this time
                 if (p.class_id, p.subject_id) not in self.needed:
                     raise bad("that class does not have that subject.")
                 self.pins.append((p.class_id, p.subject_id, p.day, p.period))
@@ -212,6 +221,7 @@ def generate_timetable(db: sqlite3.Connection) -> dict:
             db.execute("DELETE FROM lessons")
             db.executemany("INSERT INTO lessons (class_id, teacher_id, subject_id, day, period) VALUES (?, ?, ?, ?, ?)",
                            lessons)
-        return {"ok": True, "lessons_count": len(lessons), "seconds": round(time.perf_counter() - started, 1)}
+        return {"ok": True, "lessons_count": len(lessons), "seconds": round(time.perf_counter() - started, 1),
+                "warnings": problem.warnings}
     finally:
         _busy.release()

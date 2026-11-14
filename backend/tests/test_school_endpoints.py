@@ -80,26 +80,7 @@ def test_timetable_unknown_or_bad_id(api):
 
 
 # ---------- POST /api/classes ----------
-
-def test_adding_a_class_to_a_full_grade_gets_section_5_then_6(api):
-    first = api.post("/api/classes", json={"grade": 3})
-    assert first.status_code == 201
-    assert first.json()["name"] == "5/3" and first.json()["grade"] == 3
-    assert api.post("/api/classes", json={"grade": 3}).json()["name"] == "6/3"
-    assert one(api.db, "SELECT COUNT(*) FROM classes") == 22
-    names = [c["name"] for c in api.get("/api/classes").json() if c["grade"] == 3]
-    assert names == ["1/3", "2/3", "3/3", "4/3", "5/3", "6/3"]  # still sorted by section number
-
-
-def test_new_class_gets_the_next_free_section(api):
-    api.db.execute("DELETE FROM classes WHERE name = '3/2'")  # free up section 3 of grade 2
-    api.db.commit()
-    r = api.post("/api/classes", json={"grade": 2})
-    assert r.status_code == 201
-    body = r.json()
-    assert body["name"] == "3/2" and body["grade"] == 2 and isinstance(body["id"], int)
-    assert any(c["name"] == "3/2" for c in api.get("/api/classes").json())
-    assert teacher_of(api.db, body["id"], 1) == []  # new class starts with no teachers
+# The class + automatic teachers + regeneration are tested in test_class_autosetup.py.
 
 
 def test_bad_grade_is_rejected(api):
