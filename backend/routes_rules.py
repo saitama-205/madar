@@ -46,6 +46,17 @@ def check_things_exist(db: sqlite3.Connection, kind: str, p) -> None:
             raise invalid("That class does not have lessons of that subject, so there is nothing to pin.")
 
 
+class ParseIn(BaseModel):
+    text: str = Field(max_length=500)
+
+
+@router.post("/rules/parse")
+def parse_rule(body: ParseIn, db: sqlite3.Connection = Depends(get_db)):
+    """Preview only: turn typed English/Arabic into a rule. Nothing is saved; the user confirms with POST /api/rules."""
+    from ai.rule_parser import parse_rule_text  # imported here because rule_parser itself imports this module
+    return parse_rule_text(db, body.text)
+
+
 @router.get("/rules")
 def list_rules(db: sqlite3.Connection = Depends(get_db)):
     return [rule_dict(r) for r in db.execute("SELECT id, kind, params, source_text FROM rules ORDER BY id")]
