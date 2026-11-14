@@ -7,7 +7,7 @@
   --mono:"Cascadia Code","IBM Plex Sans Arabic","Cascadia Mono",Consolas,"SF Mono",Menlo,monospace}
 *{box-sizing:border-box}
 body,input,button{font-family:var(--mono)}
-body{margin:0;background:#fff;color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--page,#fff);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 /* Welcome text and form are two columns of the SAME height, so their top and bottom edges line up. */
 .login-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,6vw,120px);
   align-content:center;align-items:stretch;padding:0 clamp(0px,1.5vw,28px)}
