@@ -24,7 +24,7 @@ def find_affected(db: sqlite3.Connection, teacher_id: int, day: int, max_substit
         if p["day"] == day:
             blocked.add((p["teacher_id"], p["period"]))
 
-    lessons = db.execute("""SELECT l.period, l.class_id, c.name AS class, l.subject_id, s.name AS subject
+    lessons = db.execute("""SELECT l.period, l.class_id, c.name AS class, l.subject_id, s.name AS subject, s.name_ar AS subject_ar
                             FROM lessons l JOIN classes c ON c.id = l.class_id JOIN subjects s ON s.id = l.subject_id
                             WHERE l.teacher_id = ? AND l.day = ? ORDER BY l.period, c.grade, c.id""",
                          (teacher_id, day)).fetchall()
@@ -41,5 +41,5 @@ def find_affected(db: sqlite3.Connection, teacher_id: int, day: int, max_substit
                                "day_load": day_load.get(t["id"], 0)})
         candidates.sort(key=lambda c: (c["reason"] != "same_subject_free", c["day_load"], c["teacher_id"]))
         affected.append({"day": day, "period": period, "class_id": lesson["class_id"], "class": lesson["class"],
-                         "subject": lesson["subject"], "substitutes": candidates[:max_substitutes]})
+                         "subject": lesson["subject"], "subject_ar": lesson["subject_ar"], "substitutes": candidates[:max_substitutes]})
     return affected
