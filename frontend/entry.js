@@ -27,6 +27,8 @@
       err_id_fmt: "School ID must be exactly 4 digits",
       show_pw: "Show password",
       hide_pw: "Hide password",
+      theme_to_dark: "Switch to dark mode",
+      theme_to_light: "Switch to light mode",
     },
     ar: {
       eyebrow: "مدار / جدولة المدارس",
@@ -52,6 +54,8 @@
       err_id_fmt: "رقم المدرسة يجب أن يتكون من 4 أرقام بالضبط",
       show_pw: "إظهار كلمة المرور",
       hide_pw: "إخفاء كلمة المرور",
+      theme_to_dark: "التبديل إلى الوضع الداكن",
+      theme_to_light: "التبديل إلى الوضع الفاتح",
     },
   };
   const tr = (lang, key) => (STRINGS[lang] || STRINGS.en)[key] ?? STRINGS.en[key];
@@ -65,6 +69,8 @@
   const ICON = {
     back: svg('<path d="M20 12H5M11 5.5L4.5 12 11 18.5"/>'),
     eye: svg('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>'),
+    sun: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>'),
+    moon: svg('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>'),
     eyeOff: svg('<path d="M3.5 3.5l17 17M10.6 5.6A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3 3.7M6.2 7.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.3 9.3 0 0 0 4.2-1M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
   };
 
@@ -138,11 +144,14 @@
   function renderLogin() {
     const lang = st.lang;
     const t = (key) => tr(lang, key);
+    const dark = root.dataset.theme === "dark";
     body.dir = lang === "ar" ? "rtl" : "ltr";
     body.lang = lang;
     root.lang = lang;
     body.innerHTML = `
       <div class="lang-row rv" style="--i:0">
+        <button class="lang theme-btn" id="theme" type="button" aria-label="${t(dark ? "theme_to_light" : "theme_to_dark")}"
+          title="${t(dark ? "theme_to_light" : "theme_to_dark")}">${dark ? ICON.sun : ICON.moon}</button>
         <button class="lang" id="lang" type="button" aria-label="${t("lang_aria")}" lang="${lang === "en" ? "ar" : "en"}">${t("lang_switch")}</button>
       </div>
       <div class="login-grid">
@@ -222,6 +231,14 @@
     $("#forgot").addEventListener("click", forgot);
     $("#forgot").addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); forgot(); }
+    });
+
+    $("#theme").addEventListener("click", () => {
+      Object.assign(st, { school: school.value, pw: pw.value, remember: remember.checked });
+      Session.setTheme(dark ? "light" : "dark");
+      root.dataset.theme = Session.theme();
+      renderLogin();
+      $("#theme").focus();
     });
 
     $("#lang").addEventListener("click", () => {

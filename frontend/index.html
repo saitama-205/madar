@@ -10,6 +10,8 @@
     // and pick the lighter look on slow devices. ?lite=1 forces the lighter look on, ?lite=0 forces it off.
     (function () {
       var root = document.documentElement; root.classList.add("js");
+      var theme; try { theme = JSON.parse(localStorage.getItem("madar.theme")); } catch (e) {}
+      root.dataset.theme = theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
       if (location.hash === "#login") root.classList.add("go", "done", "instant");
       else root.classList.add("lock");
       var q = new URLSearchParams(location.search).get("lite"), nv = navigator;
@@ -23,6 +25,7 @@
   <link rel="stylesheet" href="assets/css/aurora.css">
   <link rel="stylesheet" href="assets/css/glass.css">
   <link rel="stylesheet" href="assets/css/morph.css">
+  <link rel="stylesheet" href="assets/css/theme.css">
 </head>
 <body>
   <!-- Glass filters for the 3D logo and the scroll cue (normal, small, lite). -->
