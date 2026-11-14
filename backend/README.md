@@ -43,4 +43,9 @@ on every start, so anything added through the app is lost when the service resta
 - `main.py`: app setup, error format (`{error, message}`), startup seeding, `POST /api/reset`, static files.
 - `errors.py`: `ApiError(status, code, message)`, raise it in an endpoint to return the error format.
 - `routes_school.py`: subjects, classes, teachers, timetable (read) and `POST /api/classes`, `POST /api/teachers`.
-- `tests/`: pytest tests.
+- `routes_timetable.py`: `POST /api/timetable/generate`.
+- `solver.py`: the OR-Tools solver. Reads the database only, checks the data first (missing teachers, hours not 35,
+  overloaded teachers, broken rules) with clear errors, solves in about a second, and replaces `lessons` in one
+  transaction, so a failed run keeps the old timetable. The daily and parallel caps live at the top of this file.
+  Set `MADAR_SOLVER_SECONDS` to change the 30 second time limit.
+- `tests/`: pytest tests. `test_solver.py` re-checks every contract hard rule on the saved lessons.
