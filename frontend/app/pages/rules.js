@@ -137,22 +137,59 @@ function wireClasses() {
   };
 }
 
-// ---------- subject hours per grade, counted from the timetable ----------
+// ---------- subject hours per grade (GET /api/subject-hours, PUT /api/subject-hours/{grade}) ----------
+const WEEK = 35;
+let hours = [];                 // [{ grade, subject_id, per_week }]
+let editGrade = null;           // the grade being edited (one at a time)
+
 async function drawHours() {
+  const body = $("#hours .empty");
+  try { hours = await api("/subject-hours"); }
+  catch (e) { body.outerHTML = msg("err", esc(e.message)); return; }
+  paintHours();
+}
+function paintHours() {
   const box = $("#hours");
-  const lessons = await allLessons().catch(() => []);
-  const body = box.querySelector(".empty");
-  if (!lessons.length) { body.textContent = t("hours_none"); return; }
-  const grades = [...new Set(state.classes.map((c) => c.grade))].sort();
-  const rows = grades.map((g) => {
-    const cls = state.classes.find((c) => c.grade === g && lessons.some((l) => l.class_id === c.id));
-    const counts = {};
-    if (cls) for (const l of lessons) if (l.class_id === cls.id) counts[l.subject_id] = (counts[l.subject_id] || 0) + 1;
-    return { g, counts };
+  const grades = [...new Set(hours.map((h) => h.grade))].sort();
+  const per = (g, sid) => hours.find((h) => h.grade === g && h.subject_id === sid)?.per_week ?? 0;
+  const total = (g) => state.subjects.reduce((n, s) => n + per(g, s.id), 0);
+  box.innerHTML = `<h2>${esc(t("hours_t"))}</h2><p class="help">${esc(t("hours_d"))}</p>
+    <div class="scroll"><table class="list hours"><thead><tr><th></th>${state.subjects.map((s) => `<th>${subjectChip(s.id)}</th>`).join("")}<th>${esc(t("hours_total"))}</th><th></th></tr></thead>
+    <tbody>${grades.map((g) => {
+      const on = g === editGrade;
+      return `<tr data-g="${g}"><th>${esc(t("grade_n", { n: g }))}</th>${state.subjects.map((s) => on
+        ? `<td><input class="hin" type="number" inputmode="numeric" min="0" max="${WEEK}" step="1" data-s="${s.id}" value="${per(g, s.id)}" aria-label="${esc(subjectName(s.id))}"></td>`
+        : `<td>${per(g, s.id)}</td>`).join("")}
+        <td class="total ${on ? "live" : ""}">${total(g)}</td>
+        <td class="end hact">${on
+          ? `<button class="btn mini" data-save="${g}" ${total(g) === WEEK ? "" : "disabled"}>${esc(t("hours_save"))}</button>
+             <button class="btn mini secondary" data-cancel="1">${esc(t("cancel"))}</button>`
+          : `<button class="btn mini secondary icon-btn" data-edit="${g}" aria-label="${esc(t("hours_edit", { n: g }))}" title="${esc(t("hours_edit", { n: g }))}">${ICON.pencil}</button>`}</td></tr>`;
+    }).join("")}</tbody></table></div>
+    <div id="hours-note"></div>`;
+  $$("[data-edit]", box).forEach((b) => (b.onclick = () => { editGrade = Number(b.dataset.edit); paintHours(); }));
+  const cancel = $("[data-cancel]", box);
+  if (cancel) cancel.onclick = () => { editGrade = null; paintHours(); };
+  if (editGrade == null) return;
+  const row = $(`tr[data-g="${editGrade}"]`, box), save = $("[data-save]", row), sum = $(".total", row);
+  const read = () => Object.fromEntries($$("input.hin", row).map((i) => [i.dataset.s, i.value === "" ? NaN : Number(i.value)]));
+  const check = () => {
+    const vals = Object.values(read());
+    const ok = vals.every((v) => Number.isInteger(v) && v >= 0 && v <= WEEK);
+    const n = vals.reduce((a, v) => a + (Number.isFinite(v) ? v : 0), 0);
+    sum.textContent = n;
+    sum.classList.toggle("bad", n !== WEEK || !ok);
+    save.disabled = !(ok && n === WEEK);
+    $("#hours-note").innerHTML = n === WEEK && ok ? "" : msg("warn", esc(t("hours_need", { n })));
+  };
+  $$("input.hin", row).forEach((i) => (i.oninput = check));
+  check();
+  save.onclick = (e) => busy(e.currentTarget, async () => {
+    const g = editGrade;
+    const r = await updating(() => api(`/subject-hours/${g}`, { method: "PUT", body: { hours: read() } }));
+    hours = hours.filter((h) => h.grade !== g).concat(Object.entries(r.hours).map(([sid, per_week]) => ({ grade: g, subject_id: Number(sid), per_week })));
+    editGrade = null; paintHours();
   });
-  body.outerHTML = `<div class="scroll"><table class="list hours"><thead><tr><th></th>${state.subjects.map((s) => `<th>${subjectChip(s.id)}</th>`).join("")}<th>${esc(t("hours_total"))}</th></tr></thead>
-    <tbody>${rows.map(({ g, counts }) => `<tr><th>${esc(t("grade_n", { n: g }))}</th>${state.subjects.map((s) => `<td>${counts[s.id] ?? 0}</td>`).join("")}
-      <td class="total">${Object.values(counts).reduce((a, b) => a + b, 0)}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
 // ---------- teachers: search + pages ----------

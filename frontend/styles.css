@@ -339,3 +339,9 @@ details.manual .btn { margin-top: 12px; }
 
 .chips.ex { margin-top: 10px; }
 .chips.ex .chip { text-align: start; white-space: normal; line-height: 1.35; padding-block: .45em; }
+
+.hin { width: 3.4em; padding: .35em .3em; text-align: center; font-size: 1em; border-radius: 10px; border: 1.5px solid var(--rim); background: var(--field); color: var(--ink); }
+.total.bad { color: var(--err); font-weight: 700; }
+.hact { white-space: nowrap; }
+.icon-btn svg { width: 1.1em; height: 1.1em; }
+@media (max-width: 480px) { .hin { width: 3em; font-size: 16px; min-height: 40px; } .hact { display: grid; gap: 6px; } }
