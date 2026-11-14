@@ -1,6 +1,6 @@
 // Chat: type a request in English or Arabic -> the backend's AI turns it into a rule (POST /api/rules/parse)
 // -> preview bubble -> Apply (save rule + regenerate) or Cancel. Nothing changes before Apply.
-import { $, t, esc, api, ApiFail, updating, state, ruleText, heading, ICON, teacherPicker, setStale, reportUpdate } from "../core.js";
+import { $, t, esc, iso, api, ApiFail, updating, state, ruleText, heading, ICON, teacherPicker, setStale, reportUpdate } from "../core.js";
 
 let picker = null;          // optional teacher autocomplete next to the text box
 
