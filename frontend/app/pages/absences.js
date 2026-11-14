@@ -22,7 +22,7 @@ export async function render() {
       <form id="abs-form">
         <div id="abs-teacher"></div>
         <div id="who-pick"></div>
-        <div class="field days" id="days-box" ${ui.mode === "long" ? "hidden" : ""}>${esc(t("abs_days"))}
+        <div class="field abs-days" id="days-box" ${ui.mode === "long" ? "hidden" : ""}>${esc(t("abs_days"))}
           <div class="chips">${DAYS.map((d) => `<label class="chip daychip ${ui.days.has(d) ? "on" : ""}"><input type="checkbox" value="${d}" ${ui.days.has(d) ? "checked" : ""}> ${esc(dayName(d))}</label>`).join("")}</div></div>
         <div class="row" style="margin-top:14px"><button class="btn" id="abs-go" type="submit">${ICON.clock}<span>${esc(t(ui.mode === "short" ? "abs_find" : "abs_find_long"))}</span></button></div>
       </form>

@@ -356,7 +356,7 @@ fieldset.cover legend { padding: 0; }
 .pickrow input { margin-top: .35em; width: 1.2em; height: 1.2em; flex: none; }
 .help.block { display: block; }
 .bad { color: var(--err); }
-#who-pick .chips, .days .chips { margin-top: 6px; }
+#who-pick .chips, .abs-days .chips { margin-top: 6px; }
 @media (max-width: 480px) { .seg { display: grid; grid-template-columns: 1fr 1fr; } .seg button { min-height: 44px; } }
 
 /* ---------- top bar fix: wraps instead of overflowing; equal buttons; no clipped text ---------- */
@@ -426,9 +426,9 @@ details.builder summary { cursor: pointer; font-weight: 700; min-height: 32px; d
 
 /* Report absence: label, day chips and button on separate rows; the chips are hidden in long-term mode */
 #abs-form > * + * { margin-top: 16px; }
-#abs-form .days { display: block; font-size: .85em; color: var(--soft); }
-#abs-form .days[hidden] { display: none; }
-#abs-form .days .chips { margin-top: 8px; gap: 8px; }
+#abs-form .abs-days { display: block; font-size: .85em; color: var(--soft); }
+#abs-form .abs-days[hidden] { display: none; }
+#abs-form .abs-days .chips { margin-top: 8px; gap: 8px; }
 #abs-form .daychip { position: relative; }
 #abs-form .row { margin-top: 18px; }
 
