@@ -26,3 +26,18 @@ def seeded(conn):
 
     seed(conn, data_path=PUBLIC_DATA)
     return conn
+
+
+@pytest.fixture()
+def api(tmp_path, monkeypatch):
+    """The real app (starts and seeds like production) on a temp database, plus a direct DB connection."""
+    monkeypatch.setenv("MADAR_DB", str(tmp_path / "api.db"))
+    from fastapi.testclient import TestClient
+
+    from database.db import get_connection
+    from main import create_app
+
+    with TestClient(create_app(frontend_dir=tmp_path / "no-frontend")) as client:
+        client.db = get_connection()
+        yield client
+        client.db.close()

@@ -40,5 +40,7 @@ on every start, so anything added through the app is lost when the service resta
 
 ## Code map
 
-- `main.py`: app setup, error format (`{error, message}`), startup seeding, static files. Endpoints are added step by step.
+- `main.py`: app setup, error format (`{error, message}`), startup seeding, `POST /api/reset`, static files.
+- `errors.py`: `ApiError(status, code, message)`, raise it in an endpoint to return the error format.
+- `routes_school.py`: subjects, classes, teachers, timetable (read) and `POST /api/classes`, `POST /api/teachers`.
 - `tests/`: pytest tests.

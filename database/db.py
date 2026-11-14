@@ -17,7 +17,9 @@ def get_connection() -> sqlite3.Connection:
 
     Create one connection per request/operation and close it when done.
     """
-    conn = sqlite3.connect(get_db_path())
+    # check_same_thread=False: FastAPI may run a request's dependency and endpoint on different worker
+    # threads. Safe here because every request gets its own connection and uses it one step at a time.
+    conn = sqlite3.connect(get_db_path(), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn

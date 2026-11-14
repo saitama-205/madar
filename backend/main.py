@@ -16,17 +16,12 @@ sys.path.insert(0, str(ROOT))
 
 from database.db import get_connection  # noqa: E402
 from database.seed import seed, seed_if_empty  # noqa: E402
+from errors import ApiError  # noqa: E402
+from routes_school import router as school_router  # noqa: E402
 
 FRONTEND_DIR = ROOT / "frontend"
 
 ERROR_CODES = {400: "bad_request", 404: "not_found", 405: "method_not_allowed", 409: "conflict", 422: "invalid_request"}
-
-
-class ApiError(Exception):
-    """Raise this in an endpoint to return the contract's error shape: {"error": code, "message": sentence}."""
-
-    def __init__(self, status: int, error: str, message: str):
-        self.status, self.error, self.message = status, error, message
 
 
 def error_response(status: int, error: str, message: str) -> JSONResponse:
@@ -75,7 +70,8 @@ def create_app(frontend_dir: Path = FRONTEND_DIR) -> FastAPI:
             conn.close()
         return {"ok": True}
 
-    # Added in later steps: subjects, classes, teachers, timetable, generate, rules.
+    app.include_router(school_router)  # subjects, classes, teachers, timetable
+    # Added in later steps: generate, rules.
 
     # Must be LAST: "/" matches everything, so API routes above are checked first.
     if frontend_dir.is_dir():
