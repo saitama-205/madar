@@ -43,7 +43,7 @@ def norm(text) -> str:
 
 
 def clean_name(text) -> str:
-    """'ر.ق هناء الجيماز' -> 'هناء الجيماز'; drops '*' marks and stray dots."""
+    """'ر.ق سارة العلي' -> 'سارة العلي'; drops '*' marks and stray dots."""
     s = norm(str(text).replace("*", " "))
     s = re.sub(r"^ر\.ق\s*", "", s)
     s = re.sub(r"\s*\.\s*", " ", s)
@@ -51,7 +51,7 @@ def clean_name(text) -> str:
 
 
 def short_name(full: str) -> str:
-    """First name + first letter of the last name (ignoring the 'ال' prefix): 'فاطمة المليفي' -> 'فاطمة م.'"""
+    """First name + first letter of the last name (ignoring the 'ال' prefix): 'مريم الكندري' -> 'مريم ك.'"""
     parts = full.split()
     if len(parts) == 1:
         return parts[0]

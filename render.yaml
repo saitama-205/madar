@@ -1,4 +1,5 @@
 # Render blueprint (free plan). Render builds from the repo root.
+# PYTHON_VERSION is pinned to 3.12.7 (OR-Tools ships wheels for it; the contract needs 3.12+).
 # The free plan has a temporary disk: the database is rebuilt from database/seed_data.json on every start,
 # so teachers/rules added through the app and generated timetables are lost when the service restarts.
 services:
@@ -11,4 +12,4 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13.4
+        value: 3.12.7

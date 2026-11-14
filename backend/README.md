@@ -52,3 +52,7 @@ on every start, so anything added through the app is lost when the service resta
 - `rule_params.py`: the settings each rule kind needs (whole numbers, day 0-4, period 1-7, no unknown keys).
   Shared by the rules endpoints and the solver, so they always agree on what a valid rule is.
 - `tests/`: pytest tests. `test_solver.py` re-checks every contract hard rule on the saved lessons.
+
+## AI privacy rule
+
+Any AI feature (OpenRouter) may only receive shortened teacher names as stored in the database (first name + initial, e.g. `Sara K.`), never full names, and no other personal data. The full-name file `database/seed_data.local.json` and `source data/` stay on the owner's machine (git-ignored).
