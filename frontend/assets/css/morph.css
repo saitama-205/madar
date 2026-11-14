@@ -5,11 +5,10 @@
   /* arrow and its tab in the white margin */
   --cue:54px;                              /* arrow box, 15% smaller than before (64 px) */
   --th:clamp(30px,2.4vw,46px);             /* how far the white margin rises (its thickness) */
-  --tw:clamp(76px,6vw,112px);              /* tab width at its waist */
-  --fx:clamp(40px,6vw,110px);              /* how far each smooth curve reaches into the margin */
-  --bx:clamp(12px,1.2vw,22px)}             /* width of the tab's bottom corners */
-/* Each side of the tab is one smooth S-curve: a long concave sweep from the margin (top half of --th)
-   flowing into a short convex corner at the bottom (bottom half), meeting vertically half way down. */
+  --tb:clamp(64px,4.6vw,88px);             /* tab width at the bottom */
+  --fx:clamp(48px,5.5vw,110px)}            /* length of each curve */
+/* Each side of the tab is ONE smooth S-curve (a single cubic Bezier): it leaves the margin flat, dips, and
+   lands flat on the bottom edge, so the tab flows out of the panel with no corners at all. */
 
 html.lock{overflow:hidden}
 html.instant *,html.instant *::before,html.instant *::after{transition:none!important}
@@ -56,15 +55,15 @@ html:not(.go) .aur.b .blob,.done .aur.a .blob,.slide:not(.vis) .blob{animation-p
   transition:transform .5s ease .8s}
 .go .notch{transform:translateY(100%);transition:transform .4s ease}
 .notch i{position:absolute;display:block}
-.sh{bottom:0;height:var(--th);width:calc(50% - var(--tw)/2);background:#fff}
-.sh.l{left:0;border-top-right-radius:var(--fx) calc(var(--th)/2)}
-.sh.r{right:0;border-top-left-radius:var(--fx) calc(var(--th)/2)}
+.sh{bottom:0;height:var(--th);width:calc(50% - var(--tb)/2 - var(--fx) + 1px);background:#fff}   /* +1px: no seam */
+.sh.l{left:0}
+.sh.r{right:0}
+.notch .cv{position:absolute;bottom:0;height:var(--th);width:var(--fx);fill:#fff;shape-rendering:geometricPrecision}
+.cv.l{left:calc(50% - var(--tb)/2 - var(--fx))}
+.cv.r{right:calc(50% - var(--tb)/2 - var(--fx))}
 .cn{bottom:var(--th);width:var(--r);height:var(--r)}                     /* the panel's own bottom corners */
 .cn.l{left:0;background:radial-gradient(circle at 100% 0,transparent calc(var(--r) - .5px),#fff var(--r))}
 .cn.r{right:0;background:radial-gradient(circle at 0 0,transparent calc(var(--r) - .5px),#fff var(--r))}
-.tc{bottom:0;width:var(--bx);height:calc(var(--th)/2)}                  /* the tab's bottom corners */
-.tc.l{left:calc(50% - var(--tw)/2);background:radial-gradient(var(--bx) calc(var(--th)/2) at 100% 0,transparent 96%,#fff 100%)}
-.tc.r{right:calc(50% - var(--tw)/2);background:radial-gradient(var(--bx) calc(var(--th)/2) at 0 0,transparent 96%,#fff 100%)}
 
 /* ---- the arrow, at the top of its tab ---- */
 .cue{position:absolute;z-index:4;left:50%;bottom:calc(var(--th) - var(--cue)*.42);transform:translateX(-50%);
