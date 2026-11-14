@@ -6,17 +6,8 @@
   --rim:inset 0 0 0 1.5px rgba(255,255,255,.92),inset 0 -12px 22px rgba(28,69,213,.10);
   --mono:"Cascadia Code","IBM Plex Sans Arabic","Cascadia Mono",Consolas,"SF Mono",Menlo,monospace}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-snap-type:y proximity}
 body,input,button{font-family:var(--mono)}
 body{margin:0;background:#fff;color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
-.aurora{border-radius:var(--r)}
-.screen{width:100%;height:100vh;height:100dvh;box-sizing:border-box;padding:var(--m);scroll-snap-align:start}
-#login{width:100%;min-height:100vh;box-sizing:border-box;padding:var(--m) var(--mx) clamp(32px,4vw,64px);
-  display:flex;flex-direction:column;gap:clamp(28px,4.5vw,72px);scroll-snap-align:start}
-/* Banner keeps its size (full width x the wordmark's 1541:364 shape, never taller than 364px) while the
-   wordmark + slogan inside are 10% smaller (77.4% / 1387px), so the text breathes. */
-.aurora.banner{flex:none;width:100%;height:auto;aspect-ratio:1/.2031;max-height:364px}
-.banner .stage{--stage-max:77.4%;max-width:1387px}
 /* Welcome text and form are two columns of the SAME height, so their top and bottom edges line up. */
 .login-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,6vw,120px);
   align-content:center;align-items:stretch;padding:0 clamp(0px,1.5vw,28px)}
@@ -71,7 +62,9 @@ input::-webkit-contacts-auto-fill-button{visibility:hidden;pointer-events:none;p
 .h1,.h2{margin:0}
 [dir=rtl] *{letter-spacing:0!important}
 [dir=rtl] .flabel{margin:0 .4em .5em 0}
-.body-wrap{flex:1;display:flex;flex-direction:column;gap:clamp(12px,2vw,28px)}
+/* Login content below the banner (the banner itself is the morphing .slide, see morph.css). */
+.body-wrap{flex:1;display:flex;flex-direction:column;gap:clamp(12px,2vw,28px);
+  padding:clamp(28px,4.5vw,72px) calc(var(--mx) - var(--m)) clamp(0px,1vw,20px)}
 .lang-row{display:flex;justify-content:flex-end}
 .lang{cursor:pointer;border:1.5px solid var(--royal);color:var(--royal);background:transparent;border-radius:999px;
   padding:.35em 1.1em;font-size:clamp(12px,.95vw,16px);transition:background .2s,color .2s}

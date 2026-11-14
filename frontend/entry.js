@@ -1,4 +1,4 @@
-// MADAR entry page: one scrolling page, landing (#top) -> login (#login). English + Arabic (RTL).
+// MADAR entry page: landing -> (morph) -> login. English + Arabic (RTL).
 // Sign-in goes only through MadarAuth (services/auth.js); the session through Session (services/session.js).
 {
   // ---------- text (i18n) ----------
@@ -89,8 +89,8 @@
     return html;
   }
   const stage = $("#logo-stage");
-  stage.style.cssText = `width:min(600px,var(--stage-max,80%));aspect-ratio:600/500;` +
-    `--hd:url("${asset("assets/logo_hd.png")}");--edge:url("${asset("assets/logo_edge.png")}");--sy:16deg;--sx:6deg;`;
+  // Size comes from .mark (morph.css); the stage only carries the image addresses and the sway angles.
+  stage.style.cssText = `--hd:url("${asset("assets/logo_hd.png")}");--edge:url("${asset("assets/logo_edge.png")}");--sy:16deg;--sx:6deg;`;
   stage.innerHTML = `<div class="sway" aria-hidden="true"><div class="tilt" data-k="1">${extrusion()}` +
     `<img class="face" src="assets/logo_hd.png" alt="" aria-hidden="true"><div class="glow"></div><div class="sheen"></div></div></div>`;
 
@@ -104,25 +104,10 @@
   });
   document.addEventListener("mouseleave", () => document.querySelectorAll(".tilt").forEach((t) => (t.style.transform = "")));
 
-  // ---------- scroll effects ----------
   const root = document.documentElement;
-  const prog = () => root.style.setProperty("--p", Math.min(Math.max(scrollY / innerHeight, 0), 1).toFixed(3));
-  addEventListener("scroll", prog, { passive: true });
-  addEventListener("resize", prog);
-  prog();
-
-  const revealObs = new IntersectionObserver((es) => es.forEach((e) => {
-    if (e.isIntersecting) { e.target.classList.add("in"); revealObs.unobserve(e.target); }
-  }), { threshold: 0.15 });
-  const observeReveals = () => document.querySelectorAll(".reveal:not(.in)").forEach((el) => revealObs.observe(el));
-  // Pause the gradient while it is off-screen.
+  // Pause the gradient while the panel is off-screen (e.g. scrolled down to a long form on a phone).
   const visObs = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle("vis", e.isIntersecting)));
-  document.querySelectorAll(".aurora").forEach((el) => visObs.observe(el));
-
-  document.querySelector(".cue a").addEventListener("click", (e) => {
-    e.preventDefault();
-    $("#login").scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
-  });
+  visObs.observe($("#slide"));
 
   // ---------- toast ----------
   let toastTimer;
@@ -147,35 +132,33 @@
   // ---------- login ----------
   const { auth, CONFIG, normalizeSchoolId, isValidSchoolId } = window.MadarAuth;
   const remembered = Session.rememberedId();
-  const st = { lang: Session.lang(), school: remembered, pw: "", remember: Boolean(remembered), first: true, busy: false };
-  const body = $("#login-body");
+  const st = { lang: Session.lang(), school: remembered, pw: "", remember: Boolean(remembered), busy: false };
+  const body = $("#login");
 
   function renderLogin() {
     const lang = st.lang;
     const t = (key) => tr(lang, key);
-    const reveal = st.first ? "reveal" : "reveal in";
-    st.first = false;
-
     body.dir = lang === "ar" ? "rtl" : "ltr";
     body.lang = lang;
     root.lang = lang;
     body.innerHTML = `
-      <div class="lang-row">
+      <div class="lang-row rv" style="--i:0">
         <button class="lang" id="lang" type="button" aria-label="${t("lang_aria")}" lang="${lang === "en" ? "ar" : "en"}">${t("lang_switch")}</button>
       </div>
       <div class="login-grid">
-        <div class="intro ${reveal}" style="--d:.15s">
+        <div class="intro">
           <div class="intro-top">
-            <div class="eyebrow">${t("eyebrow")}</div>
-            <h1 class="h1">${t("h1")}</h1>
-            <h2 class="h2">${t("h2")}</h2>
+            <div class="eyebrow rv" style="--i:1">${t("eyebrow")}</div>
+            <h1 class="h1 rv" style="--i:2">${t("h1")}</h1>
+            <h2 class="h2 rv" style="--i:3">${t("h2")}</h2>
           </div>
           <div class="intro-bot">
-            <p class="help">${t("help")}</p>
-            ${CONFIG.MOCK_MODE ? `<p class="demo">${t("demo")}</p>` : ""}
+            <p class="help rv" style="--i:5">${t("help")}</p>
+            ${CONFIG.MOCK_MODE ? `<p class="demo rv" style="--i:6">${t("demo")}</p>` : ""}
           </div>
         </div>
-        <form class="form ${reveal}" style="--d:.3s" id="login-form" novalidate>
+        <form class="form" id="login-form" novalidate>
+          <div class="rv" style="--i:2">
           <label class="flabel" for="school">${t("school_id")}</label>
           <div class="m-field" id="f-school">
             <div class="ctrl">
@@ -184,6 +167,8 @@
             </div>
             <div class="err" id="school-err" aria-live="polite"></div>
           </div>
+          </div>
+          <div class="rv" style="--i:3">
           <label class="flabel" for="pw">${t("password")}</label>
           <div class="m-field" id="f-pw">
             <div class="ctrl">
@@ -192,13 +177,16 @@
             </div>
             <div class="err" id="pw-err" aria-live="polite"></div>
           </div>
-          <div class="row">
+          </div>
+          <div class="row rv" style="--i:4">
             <label class="check"><input type="checkbox" id="remember"> <span>${t("remember")}</span></label>
             <span class="flink" id="forgot" tabindex="0" role="button">${t("forgot")}</span>
           </div>
-          <button class="m-btn" id="login-btn" type="submit">
-            <span class="label">${t("login")}</span><span class="spin" aria-hidden="true"></span>
-          </button>
+          <div class="rv" style="--i:5">
+            <button class="m-btn" id="login-btn" type="submit">
+              <span class="label">${t("login")}</span><span class="spin" aria-hidden="true"></span>
+            </button>
+          </div>
         </form>
       </div>`;
 
@@ -267,10 +255,113 @@
       pw.value = "";
       pw.focus();
     });
-
-    observeReveals();
   }
 
   renderLogin();
   renderResume(st.lang);
+
+  // ---------- morph: landing <-> login ----------
+  // Triggers: arrow click, scroll down (wheel, swipe up, ArrowDown / PageDown / Space), click or Enter on the icon.
+  // Scrolling up at the top of the login (or Escape) plays it back. Input is ignored while it plays.
+  const slide = $("#slide"), mark = $("#mark"), cue = $("#cue");
+  const IMG_W = 1541, IMG_H = 364, DIAMOND = { x0: 1186, y0: 20, x1: 1520, y1: 298 };   // diamond's box in the PNG
+  const OPEN_MS = reducedMotion ? 0 : 1800, CLOSE_MS = reducedMotion ? 0 : 1300;
+  let busyUntil = 0, timer = 0;
+
+  // Where the icon lands, measured on the real page at every trigger (any window size). The icon and the wordmark
+  // are both centred in the panel and stay centred while it shrinks, so the flight is the diamond's offset from
+  // the wordmark's centre, and the scale is the diamond's width over the icon's width.
+  function fit() {
+    const r = $(".word img").getBoundingClientRect();
+    const cx = ((DIAMOND.x0 + DIAMOND.x1) / 2) / IMG_W, cy = ((DIAMOND.y0 + DIAMOND.y1) / 2) / IMG_H;
+    root.style.setProperty("--dx", (r.width * (cx - 0.5)).toFixed(2) + "px");
+    root.style.setProperty("--dy", (r.height * (cy - 0.5)).toFixed(2) + "px");
+    root.style.setProperty("--s", ((r.width * (DIAMOND.x1 - DIAMOND.x0) / IMG_W) / mark.offsetWidth).toFixed(4));
+  }
+
+  function opened(on) {                       // accessibility side of the state
+    mark.setAttribute("aria-expanded", String(on));
+    mark.tabIndex = on ? -1 : 0;
+    cue.tabIndex = on ? -1 : 0;
+    body.inert = !on;
+    try { history.replaceState(null, "", on ? "#login" : location.pathname + location.search); } catch {}
+  }
+
+  const isOpen = () => root.classList.contains("go");
+  const isDone = () => root.classList.contains("done");
+  const busy = () => Date.now() < busyUntil;
+  const atTop = () => (window.scrollY || root.scrollTop) <= 0;
+
+  function open(byKeyboard) {
+    if (isOpen() || busy()) return;
+    fit();
+    busyUntil = Date.now() + OPEN_MS;
+    root.classList.add("go");
+    opened(true);
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      root.classList.add("done");
+      root.classList.remove("lock");             // the login content can scroll now
+      if (byKeyboard) $("#school").focus({ preventScroll: true });
+    }, OPEN_MS);
+  }
+
+  function close(byKeyboard) {
+    if (!isDone() || busy()) return;
+    clearTimeout(timer);
+    busyUntil = Date.now() + CLOSE_MS;
+    root.classList.add("lock");
+    window.scrollTo(0, 0);
+    root.classList.remove("done", "go");           // the same transitions play backwards
+    opened(false);
+    if (byKeyboard) mark.focus({ preventScroll: true });
+  }
+
+  mark.addEventListener("click", () => open(false));
+  mark.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); open(true); }
+  });
+  cue.addEventListener("click", (e) => open(e.detail === 0));        // detail 0 = pressed with the keyboard
+
+  addEventListener("wheel", (e) => {
+    if (!isDone() || busy()) {                                       // landing or playing: the page never scrolls
+      e.preventDefault();
+      if (!isOpen() && e.deltaY > 2) open(false);
+      return;
+    }
+    if (e.deltaY < -2 && atTop()) { e.preventDefault(); close(false); }
+  }, { passive: false });
+
+  let touchY = null;
+  addEventListener("touchstart", (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+  addEventListener("touchmove", (e) => { if (!isDone() || busy()) e.preventDefault(); }, { passive: false });
+  addEventListener("touchend", (e) => {
+    if (touchY === null) return;
+    const dy = touchY - e.changedTouches[0].clientY;                 // > 0 = swipe up = scroll down
+    touchY = null;
+    if (dy > 30) open(false);
+    else if (dy < -30 && atTop()) close(false);
+  }, { passive: true });
+
+  const SCROLL_KEYS = ["ArrowDown", "PageDown", " ", "ArrowUp", "PageUp", "Home", "End"];
+  addEventListener("keydown", (e) => {
+    const typing = e.target.closest && e.target.closest("input, textarea, select, [contenteditable]");
+    if (typing) return;
+    if (!isDone() || busy()) {
+      if (SCROLL_KEYS.includes(e.key)) e.preventDefault();
+      if (!isOpen() && ["ArrowDown", "PageDown", " "].includes(e.key)) open(true);
+      return;
+    }
+    if (e.key === "Escape" || ((e.key === "ArrowUp" || e.key === "PageUp") && atTop())) { e.preventDefault(); close(true); }
+  });
+
+  addEventListener("resize", () => { if (isOpen()) fit(); });
+  addEventListener("hashchange", () => { if (location.hash === "#login") open(false); });   // a link to #login on this page
+
+  // Opened straight away (link to .../#login, e.g. from the timetable's sign-in guard): no animation.
+  if (isOpen()) {
+    fit();
+    opened(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("instant")));
+  }
 }
