@@ -89,6 +89,13 @@ The database owner (saitama-205) provides `database/schema.sql`, `database/seed.
 3. Each class gets exactly `subject_hours.per_week` lessons of each subject
 4. Each lesson's teacher is the one assigned to that class for that subject
 5. All saved `rules` are kept
+6. **Daily cap:** a class gets at most **2** lessons of Arabic, Math, Art or Music on one day, and at most **1** of every other subject
+7. **Parallel cap:** at most this many classes may have the same subject in the same slot: Science 2, Computer 2, Art 4, PE 4, Music 2 (Islamic, Arabic, English, Math, Social: no cap)
+
+Real school data (from the school's own timetable): 10 subjects (Quran is part of Islamic Education, 4 lessons/week),
+hours per week for grades 1–3 / 4–5: Islamic 4/4 · Arabic 9/7 · English 5/5 · Math 5/6 · Science 2/3 · Social 1/3 ·
+Computer 1/1 · PE 4/3 · Art 2/2 · Music 2/1 (35 per class). Teachers who are "lighter" at the start or end of the day
+are stored as `teacher_unavailable` rules.
 
 ## Git workflow
 
