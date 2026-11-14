@@ -122,12 +122,34 @@ export const ICON = {
 
 // ---------- feedback ----------
 let toastTimer;
-export function toast(text, isError = false) {
+// kind: false/"ok" (dark), true/"err" (red), "warn" (yellow). sticky: stays until the next toast.
+export function toast(text, kind = false, sticky = false) {
   const el = $("#toast");
+  const k = kind === true ? "err" : kind || "";
   el.textContent = text;
-  el.className = "toast show" + (isError ? " err" : "");
+  el.className = "toast show" + (k ? " " + k : "");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (el.className = "toast"), 4000);
+  if (!sticky) toastTimer = setTimeout(() => (el.className = "toast"), k === "warn" ? 9000 : 4000);
+}
+
+// Every change on the server regenerates the timetable by itself (the response has generated / violations / warnings).
+// updating(work): show "Updating timetable…" while work() runs, then "Timetable updated" (yellow when there is
+// something to know: classes skipped, rule problems) or the reason it could not be rebuilt.
+export function reportUpdate(r) {
+  if (!r || r.generated === undefined) return r;
+  if (r.generated) {
+    markGenerated();
+    const notes = [...(r.warnings || []), ...(r.violations || [])];
+    toast(notes.length ? `${t("tt_updated")}: ${notes.slice(0, 3).join(" ")}` : t("tt_updated"), notes.length ? "warn" : false);
+  } else {
+    toast(t("tt_not_updated", { msg: (r.warnings || [])[0] || "" }), "warn");
+  }
+  return r;
+}
+export async function updating(work) {
+  toast(t("updating"), "warn", true);
+  try { return reportUpdate(await work()); }
+  catch (e) { toast(e.message, true); throw e; }
 }
 export async function busy(button, work) {
   button.disabled = true;

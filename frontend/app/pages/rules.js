@@ -1,7 +1,8 @@
-// Rules & data: data check, Excel import, classes, subject hours, teachers, add a teacher, rules, Regenerate.
-import { $, $$, t, esc, iso, api, ApiFail, missingRoute, state, loadBase, allLessons, generate, setStale, isStale,
-  subjectName, subjectChip, className, teacherName, dayName, DAYS, PERIODS, options, msg, toast, busy,
-  confirmBox, heading, ruleText, ICON, lang, markGenerated, warnList, teacherPicker } from "../core.js";
+// Rules & data: data check, Excel import, classes, subject hours, teachers, add a teacher, rules.
+// The server rebuilds the timetable after every change, so there is no Regenerate button here.
+import { $, $$, t, esc, iso, api, ApiFail, missingRoute, state, loadBase, updating,
+  subjectName, subjectChip, className, teacherName, dayName, DAYS, PERIODS, options, msg, busy,
+  confirmBox, heading, ruleText, ICON, lang, warnList, teacherPicker } from "../core.js";
 import { openWeek } from "./timetable.js";
 
 const ui = { search: "", page: 0, kind: "subject_not_in_period", parsed: null, imported: null };
@@ -54,20 +55,15 @@ function importPanel() {
     <div id="import-out">${p ? importPreview(p) : ""}</div>`;
 }
 function importPreview(p) {
-  const grades = [...new Set(p.subject_hours.map((h) => h.grade))].sort();
-  const subjects = [...new Set(p.subject_hours.map((h) => h.subject))];
-  const hours = (g, s) => p.subject_hours.find((h) => h.grade === g && h.subject === s)?.per_week ?? "";
+  const classes = new Set(p.rows.map((r) => r.class)), teachers = new Set(p.rows.filter((r) => r.teacher).map((r) => `${r.subject}|${r.teacher}`));
   return `
     <div class="preview">
       <h3>${esc(t("import_preview_t", { file: p.file }))}</h3>
-      <p class="help">${esc(t("import_counts", { classes: p.classes.length, teachers: p.teachers.length, hours: p.subject_hours.length }))}</p>
+      <p class="help">${esc(t("import_counts", { classes: classes.size, teachers: teachers.size, hours: p.rows.length }))}</p>
       ${p.warnings?.length ? msg("warn", `<div><b>${esc(t("import_warn"))}</b><ul class="bul">${p.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></div>`) : ""}
-      <div class="chips">${p.classes.map((c) => `<span class="chip">${esc(c.name)}</span>`).join("")}</div>
-      ${grades.length ? `<div class="scroll"><table class="list hours"><thead><tr><th></th>${subjects.map((s) => `<th>${esc(s)}</th>`).join("")}</tr></thead>
-        <tbody>${grades.map((g) => `<tr><th>${esc(t("grade_n", { n: g }))}</th>${subjects.map((s) => `<td>${hours(g, s)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : ""}
-      <table class="list"><thead><tr><th>${esc(t("col_name"))}</th><th>${esc(t("col_subject"))}</th><th>${esc(t("col_classes"))}</th></tr></thead>
-        <tbody>${p.teachers.slice(0, 8).map((x) => `<tr><td><bdi>${esc(x.name)}</bdi></td><td>${esc(x.subject)}</td><td>${esc(x.classes.join(", "))}</td></tr>`).join("")}</tbody></table>
-      ${p.teachers.length > 8 ? `<p class="help">+ ${p.teachers.length - 8}</p>` : ""}
+      <div class="scroll"><table class="list"><thead><tr><th>${esc(t("f_class"))}</th><th>${esc(t("col_subject"))}</th><th>${esc(t("col_name"))}</th><th>${esc(t("hours_total"))}</th></tr></thead>
+        <tbody>${p.rows.slice(0, 10).map((r) => `<tr><td>${esc(r.class)}</td><td>${esc(r.subject)}</td><td><bdi>${esc(r.teacher || "—")}</bdi></td><td>${r.hours_per_week}</td></tr>`).join("")}</tbody></table></div>
+      ${p.rows.length > 10 ? `<p class="help">+ ${p.rows.length - 10}</p>` : ""}
       <div class="row"><button class="btn danger-fill" id="import-confirm">${esc(t("import_confirm"))}</button>
         <button class="btn secondary" id="import-cancel">${esc(t("cancel"))}</button></div>
     </div>`;
@@ -103,15 +99,11 @@ function wirePreview() {
     const btn = e.currentTarget;                       // the event forgets its button once we await the dialog
     if (!(await confirmBox(t("import_confirm_q"), t("import_confirm"), true))) return;
     await busy(btn, async () => {
-      const { classes, teachers, subject_hours } = ui.imported;
-      await api("/import/confirm", { method: "POST", body: { classes, teachers, subject_hours } });
+      const r = await updating(() => api("/import/confirm", { method: "POST", body: { rows: ui.imported.rows } }));
       ui.imported = null;
       await loadBase();
-      let gen = null;
-      try { gen = await generate(); } catch (err) { setStale(true); toast(err.message, true); }
-      toast(t("import_done"));
       await render();
-      if (gen?.warnings?.length) $("#import-out").innerHTML = msg("warn", warnList(gen.warnings));
+      if (r.warnings?.length) $("#import-out").innerHTML = msg("warn", warnList(r.warnings));
     });
   };
 }
@@ -135,12 +127,9 @@ function wireClasses() {
     $("#class-out").innerHTML = msg("warn", esc(t("adding_class")));
     let out;
     try {
-      const c = await api("/classes", { method: "POST", body: { grade: Number($("#new-grade").value) } });
-      if (c.generation) {                       // the server assigned teachers and rebuilt the timetable
-        markGenerated();
-        const w = [...(c.generation.warnings || []), ...(c.generation.violations || [])];
-        out = msg(w.length ? "warn" : "ok", `<div><b>${esc(t("msg_class_ready", { klass: c.name, n: c.generation.lessons_count }))}</b>${warnList(w)}</div>`);
-      } else { setStale(true); out = msg("ok", esc(t("msg_class_added", { klass: c.name }))); }
+      const c = await updating(() => api("/classes", { method: "POST", body: { grade: Number($("#new-grade").value) } }));
+      const w = [...(c.warnings || []), ...(c.violations || [])];
+      out = msg(w.length ? "warn" : "ok", `<div><b>${esc(t("msg_class_ready", { klass: c.name, n: c.generation?.lessons_count ?? "" }))}</b>${warnList(w)}</div>`);
     } catch (err) { out = msg("err", esc(err.message)); }   // the class is kept even when the rebuild fails
     btn.disabled = false;
     await loadBase(); await render();
@@ -226,8 +215,7 @@ function wireAddTeacher() {
   $$(".t-class").forEach((i) => (i.onchange = preview));
   preview();
   $("#t-save").onclick = (e) => busy(e.currentTarget, async () => {
-    const x = await api("/teachers", { method: "POST", body: { name: $("#t-name").value, subject_id: Number($("#t-subject").value), class_ids: picked() } });
-    setStale(true); toast(t("msg_teacher_added", { name: x.name }));
+    await updating(() => api("/teachers", { method: "POST", body: { name: $("#t-name").value, subject_id: Number($("#t-subject").value), class_ids: picked() } }));
     await loadBase(); await render();
   });
 }
@@ -271,8 +259,7 @@ function rulesPanel() {
       <tr><td class="w30"><bdi><b>${esc(teacherName(tid))}</b></bdi><div class="help" dir="auto">${esc(rs[0].source_text ?? "")}</div></td>
       <td><div class="chips">${rs.map((r) => `<span class="chip">${esc(t("dayS" + r.params.day))} ${esc(t("p_short", { n: r.params.period }))}
         <button data-del="${r.id}" aria-label="${esc(t("del"))}">×</button></span>`).join("")}</div></td></tr>`).join("")}</tbody></table>` : ""}
-    <div class="regen">${isStale() ? msg("warn", esc(t("st_stale"))) : `<p class="help">${esc(t("rule_regen_note"))}</p>`}
-      <div class="row"><button class="btn" id="regen">${esc(t("regenerate"))}</button><span id="regen-out"></span></div></div>`;
+    <p class="help">${esc(t("rule_regen_note"))}</p>`;
 }
 function wireRules() {
   // plain words -> AI preview -> save
@@ -285,11 +272,13 @@ function wireRules() {
       const p = await api("/rules/parse", { method: "POST", body: { text } });
       ui.parsed = { ...p, text };
       out.innerHTML = `<div class="review"><div class="eyebrow">${esc(t("rule_review"))}</div>
-        <b>${esc(ruleText(p.kind, p.params))}</b>${p.explanation ? `<p class="help">${esc(p.explanation)}</p>` : ""}
+        ${(p.rules?.length ? p.rules : [p]).map((r) => `<b>${esc(ruleText(r.kind, r.params))}</b>`).join("<br>")}${p.explanation ? `<p class="help">${esc(p.explanation)}</p>` : ""}
         <div class="row"><button class="btn" id="nl-save">${esc(t("rule_save"))}</button><button class="btn secondary" id="nl-cancel">${esc(t("cancel"))}</button></div></div>`;
       $("#nl-cancel").onclick = () => { ui.parsed = null; out.innerHTML = ""; };
       $("#nl-save").onclick = (ev) => busy(ev.currentTarget, async () => {
-        await api("/rules", { method: "POST", body: { kind: ui.parsed.kind, params: ui.parsed.params, source_text: ui.parsed.text } });
+        const body = ui.parsed.rules?.length ? { rules: ui.parsed.rules, source_text: ui.parsed.text }
+          : { kind: ui.parsed.kind, params: ui.parsed.params, source_text: ui.parsed.text };
+        await updating(() => api("/rules", { method: "POST", body }));
         await savedRule();
       });
     } catch (err) {
@@ -317,24 +306,16 @@ function wireRules() {
   }));
   $("#r-save").onclick = (e) => busy(e.currentTarget, async () => {
     if (ui.kind === "teacher_unavailable" && !$('[data-p="teacher_id"]').value) throw new Error(t("ac_pick_first"));
-    await api("/rules", { method: "POST", body: { kind: ui.kind, params: readParams(), source_text: $("#r-note").value } });
+    await updating(() => api("/rules", { method: "POST", body: { kind: ui.kind, params: readParams(), source_text: $("#r-note").value } }));
     await savedRule();
   });
   $$("[data-del]").forEach((b) => (b.onclick = () => busy(b, async () => {
-    await api(`/rules/${b.dataset.del}`, { method: "DELETE" });
-    setStale(true); toast(t("msg_rule_removed"));
+    await updating(() => api(`/rules/${b.dataset.del}`, { method: "DELETE" }));
     state.rules = await api("/rules"); redrawRules();
   })));
-  $("#regen").onclick = (e) => busy(e.currentTarget, async () => {
-    $("#regen-out").textContent = t("generating");
-    const r = await generate().catch((err) => { $("#regen-out").textContent = ""; throw err; });
-    toast(t("built", { n: r.lessons_count, s: r.seconds }));
-    redrawRules();
-    if (r.warnings?.length) $("#regen-out").innerHTML = msg("warn", warnList(r.warnings));
-  });
 }
 async function savedRule() {
-  ui.parsed = null; setStale(true); toast(t("msg_rule_saved"));
+  ui.parsed = null;
   state.rules = await api("/rules"); redrawRules();
 }
 function redrawRules() {
