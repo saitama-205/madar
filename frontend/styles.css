@@ -423,3 +423,20 @@ details.builder summary { cursor: pointer; font-weight: 700; min-height: 32px; d
 
 .ai-ctl { min-width: 0; }
 .ai-ctl select { max-width: 100%; }
+
+/* Report absence: label, day chips and button on separate rows; the chips are hidden in long-term mode */
+#abs-form > * + * { margin-top: 16px; }
+#abs-form .days { display: block; font-size: .85em; color: var(--soft); }
+#abs-form .days[hidden] { display: none; }
+#abs-form .days .chips { margin-top: 8px; gap: 8px; }
+#abs-form .daychip { position: relative; }
+#abs-form .row { margin-top: 18px; }
+
+/* Saved rules collapsible */
+details.saved-d summary { cursor: pointer; font-weight: 700; font-size: clamp(16px, 1.4vw, 24px); list-style: none; display: flex;
+  align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; }
+details.saved-d summary::-webkit-details-marker { display: none; }
+details.saved-d summary::after { content: ""; flex: none; width: .55em; height: .55em; border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor; transform: rotate(45deg); transition: transform .2s; margin-top: -.2em; }
+details.saved-d[open] summary::after { transform: rotate(-135deg); margin-top: .2em; }
+details.saved-d[open] summary { margin-bottom: 10px; }

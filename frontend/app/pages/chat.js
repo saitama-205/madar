@@ -63,14 +63,16 @@ function drawThread() {
   }
   box.scrollTop = box.scrollHeight;
 }
+let savedOpen = false;     // closed by default; remembered while the app is open
 async function drawSaved() {
   const box = $("#saved-rules");
   if (!box) return;
   const rules = state.rules;
-  box.innerHTML = `<div class="eyebrow">${esc(t("chat_saved_e"))}</div><h2>${esc(t("chat_saved_t", { n: rules.length }))}</h2>
+  box.innerHTML = `<details class="saved-d" ${savedOpen ? "open" : ""}><summary>${esc(t("chat_saved_t", { n: rules.length }))}</summary>
     ${rules.length ? `<ul class="saved">${rules.map((r) => `<li><span dir="auto">${esc(ruleText(r.kind, r.params))}</span>
       <button type="button" class="chip" data-del="${r.id}" aria-label="${esc(t("del"))}">${esc(t("del"))}</button></li>`).join("")}</ul>`
-      : `<p class="help">${esc(t("chat_saved_none"))}</p>`}`;
+      : `<p class="help">${esc(t("chat_saved_none"))}</p>`}</details>`;
+  box.querySelector("details").ontoggle = (e) => { savedOpen = e.currentTarget.open; };
   box.querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
     b.disabled = true;
     try {
