@@ -1,0 +1,2 @@
+# Only needed to run database/import_xlsb.py on your own machine (not on Render).
+pyxlsb
