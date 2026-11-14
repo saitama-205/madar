@@ -1,6 +1,6 @@
 // Absences: write the excuse (matched to a teacher name, no AI) or pick the teacher, pick the day,
 // then POST /api/absences lists every lesson that needs cover with ranked substitutes. Nothing is saved.
-import { $, $$, t, esc, iso, api, state, subjectName, dayName, DAYS, options, msg, heading, ICON } from "../core.js";
+import { $, $$, t, esc, iso, api, state, subjectName, dayName, DAYS, options, msg, heading, ICON, lang } from "../core.js";
 
 const ui = { text: "", teacherId: null, day: Math.min(Math.max(new Date().getDay(), 0), 4), result: null, choices: null };
 if (new Date().getDay() > 4) ui.day = 0;                   // Friday / Saturday: start from Sunday
@@ -77,7 +77,7 @@ function setTeacher(id) { ui.teacherId = id; $("#abs-teacher").value = String(id
 async function run() {
   const btn = $("#abs-go"); btn.disabled = true;
   try {
-    const list = await api("/absences", { method: "POST", body: { teacher_id: ui.teacherId, day: ui.day } });
+    const list = await api("/absences", { method: "POST", body: { teacher_id: ui.teacherId, day: ui.day, lang: lang() } });
     ui.result = { teacherId: ui.teacherId, day: ui.day, list };
     drawResult();
   } catch (e) { $("#abs-out").innerHTML = msg("err", esc(e.message)); }

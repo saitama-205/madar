@@ -8,8 +8,8 @@ let pending = null;           // the proposal waiting for Apply / Cancel
 const examples = () => {
   const teacher = state.teachers[0]?.name ?? "";
   return lang() === "ar"
-    ? ["التربية البدنية لا تكون في الحصة السابعة", "الرياضيات لا تكون في الحصة الأولى", `${iso(teacher)} لا تدرّس يوم الأحد الحصة الأولى`]
-    : ["PE should never be in period 7", "Math shouldn't be in period 1", `${iso(teacher)} can't teach on Sunday period 1`];
+    ? ["انقل حصة الفصل 1/1 من الأحد الحصة الأولى إلى الاثنين الحصة الأولى", "التربية البدنية لا تكون في الحصة السابعة", `${iso(teacher)} لا تدرّس يوم الأحد الحصة الأولى`]
+    : ["Move class 1/1 Sunday period 1 to Monday period 1", "PE should never be in period 7", `${iso(teacher)} can't teach on Sunday period 1`];
 };
 
 export async function render() {
@@ -34,11 +34,11 @@ export async function render() {
         <section class="panel">
           <div class="eyebrow">${esc(t("chat_know_e"))}</div><h2>${esc(t("chat_know_t"))}</h2>
           <ul class="bul"><li>${esc(t("chat_know_1"))}</li><li>${esc(t("chat_know_2", { teacher: iso(state.teachers[0]?.name ?? "") }))}</li>
-            <li>${esc(t("chat_know_3"))}</li><li>${esc(t("chat_know_ar"))}</li></ul>
+            <li>${esc(t("chat_know_3"))}</li><li>${esc(t("chat_know_4"))}</li><li>${esc(t("chat_know_ar"))}</li></ul>
         </section>
         <section class="panel">
           <div class="eyebrow">${esc(t("chat_not_e"))}</div><h2>${esc(t("chat_not_t"))}</h2>
-          <ul class="bul"><li>${esc(t("chat_not_1"))}</li><li>${esc(t("chat_not_2"))}</li></ul>
+          <ul class="bul"><li>${esc(t("chat_not_1"))}</li><li>${esc(t("chat_not_2"))}</li><li>${esc(t("chat_not_3"))}</li></ul>
         </section>
       </aside>
     </div>`;

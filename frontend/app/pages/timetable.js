@@ -1,6 +1,6 @@
 // Timetable (home): six cards on the gradient, then the schedule by all classes, one class or one teacher.
 import { $, $$, t, esc, iso, state, api, allLessons, generate, isStale, lastGenerated, subjectName, subjectChip,
-  pastel, abbr, dayName, dayShort, DAYS, PERIODS, options, msg, ICON, byId } from "../core.js";
+  pastel, abbr, dayName, dayShort, DAYS, PERIODS, options, msg, ICON, byId, warnList } from "../core.js";
 
 // Remembered while the app is open: what the schedule shows.
 const view = { mode: "all", grade: null, classId: null, subjectId: null, teacherId: null };
@@ -60,7 +60,9 @@ export async function render() {
     $("#gen-status").innerHTML = msg("warn", esc(t("generating")));
     try {
       const r = await generate();
-      $("#gen-status").innerHTML = msg("ok", esc(t("built", { n: r.lessons_count, s: r.seconds })));
+      $("#gen-status").innerHTML = r.warnings?.length
+        ? msg("warn", `<div><b>${esc(t("built", { n: r.lessons_count, s: r.seconds }))}</b>${warnList(r.warnings)}</div>`)
+        : msg("ok", esc(t("built", { n: r.lessons_count, s: r.seconds })));
       b.textContent = t("regenerate");
       heroCards(); await drawGrid();
     } catch (err) { $("#gen-status").innerHTML = msg("err", esc(err.message)); }

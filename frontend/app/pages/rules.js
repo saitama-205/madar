@@ -1,7 +1,7 @@
 // Rules & data: data check, Excel import, classes, subject hours, teachers, add a teacher, rules, Regenerate.
 import { $, $$, t, esc, iso, api, ApiFail, missingRoute, state, loadBase, allLessons, generate, setStale, isStale,
   subjectName, subjectChip, className, teacherName, dayName, DAYS, PERIODS, options, msg, toast, busy,
-  confirmBox, heading, ruleText, ICON, lang } from "../core.js";
+  confirmBox, heading, ruleText, ICON, lang, markGenerated, warnList } from "../core.js";
 import { openWeek } from "./timetable.js";
 
 const ui = { search: "", page: 0, kind: "subject_not_in_period", parsed: null, imported: null };
@@ -107,9 +107,11 @@ function wirePreview() {
       await api("/import/confirm", { method: "POST", body: { classes, teachers, subject_hours } });
       ui.imported = null;
       await loadBase();
-      try { await generate(); } catch (err) { setStale(true); toast(err.message, true); }
+      let gen = null;
+      try { gen = await generate(); } catch (err) { setStale(true); toast(err.message, true); }
       toast(t("import_done"));
       await render();
+      if (gen?.warnings?.length) $("#import-out").innerHTML = msg("warn", warnList(gen.warnings));
     });
   };
 }
@@ -125,14 +127,25 @@ function classesPanel() {
       <label class="field">${esc(t("add_section"))}<select id="new-grade">${grades.map((g) => `<option value="${g}">${esc(t("grade_n", { n: g }))}</option>`).join("")}</select></label>
       <button class="btn" id="add-class">${esc(t("add_class"))}</button>
     </div>
-    <p class="help">${esc(t("add_class_hint"))}</p>`;
+    <p class="help">${esc(t("add_class_hint"))}</p><div id="class-out"></div>`;
 }
 function wireClasses() {
-  $("#add-class").onclick = (e) => busy(e.currentTarget, async () => {
-    const c = await api("/classes", { method: "POST", body: { grade: Number($("#new-grade").value) } });
-    setStale(true); toast(t("msg_class_added", { klass: c.name }));
+  $("#add-class").onclick = async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    $("#class-out").innerHTML = msg("warn", esc(t("adding_class")));
+    let out;
+    try {
+      const c = await api("/classes", { method: "POST", body: { grade: Number($("#new-grade").value) } });
+      if (c.generation) {                       // the server assigned teachers and rebuilt the timetable
+        markGenerated();
+        const w = [...(c.generation.warnings || []), ...(c.generation.violations || [])];
+        out = msg(w.length ? "warn" : "ok", `<div><b>${esc(t("msg_class_ready", { klass: c.name, n: c.generation.lessons_count }))}</b>${warnList(w)}</div>`);
+      } else { setStale(true); out = msg("ok", esc(t("msg_class_added", { klass: c.name }))); }
+    } catch (err) { out = msg("err", esc(err.message)); }   // the class is kept even when the rebuild fails
+    btn.disabled = false;
     await loadBase(); await render();
-  });
+    $("#class-out").innerHTML = out;
+  };
 }
 
 // ---------- subject hours per grade, counted from the timetable ----------
@@ -309,6 +322,7 @@ function wireRules() {
     const r = await generate().catch((err) => { $("#regen-out").textContent = ""; throw err; });
     toast(t("built", { n: r.lessons_count, s: r.seconds }));
     redrawRules();
+    if (r.warnings?.length) $("#regen-out").innerHTML = msg("warn", warnList(r.warnings));
   });
 }
 async function savedRule() {

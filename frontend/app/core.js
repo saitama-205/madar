@@ -62,11 +62,16 @@ export async function allLessons() {
 }
 export const dropLessons = () => { state.lessons = null; };
 
+export function markGenerated() {
+  state.generated = true; dropLessons(); setStale(false); write("madar.generatedAt", String(Date.now()));
+}
+// Generate skips classes that are missing a teacher and lists them in r.warnings (it no longer fails the school).
 export async function generate() {
   const r = await api("/timetable/generate", { method: "POST" });
-  state.generated = true; dropLessons(); setStale(false); write("madar.generatedAt", String(Date.now()));
+  markGenerated();
   return r;
 }
+export const warnList = (w) => (w?.length ? `<ul class="bul">${w.map((x) => `<li dir="auto">${esc(x)}</li>`).join("")}</ul>` : "");
 
 // ---------- names ----------
 export const byId = (list, id) => list.find((x) => x.id === id);

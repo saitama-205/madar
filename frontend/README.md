@@ -29,9 +29,11 @@ Plain HTML + CSS + JavaScript (ES modules), no build step. The backend serves th
 - `assets/css/`: `fonts.css` and `theme.css` (dark mode) are shared; `base.css`, `aurora.css`, `glass.css`,
   `morph.css` style the entry page.
 
-## Waiting on the backend
+## Backend versions
 
-These screens call endpoints from `CONTRACT.md` that are not built yet, and say so on screen until they are:
-`GET /api/import/template`, `POST /api/import`, `POST /api/import/confirm`.
-Not in the contract yet (the old app had them): move/swap one lesson, edit subject hours, edit a teacher's classes,
-long-term leave, remove a class.
+Built and tested against the `backend` branch (14:49): Excel import, absences in the UI language (`lang`),
+adding a class assigns teachers and regenerates, Generate skips classes without teachers, "move a lesson" requests.
+With an older backend the screens still work; the Excel buttons then say the import isn't available yet.
+
+Not in the contract yet (the old app had them): swapping two lessons at once, editing subject hours, editing a
+teacher's classes, long-term leave, removing a class.

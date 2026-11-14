@@ -85,8 +85,10 @@ function hardTable() {
 }
 
 function classLoad() {
-  const short = data.class_load.filter((c) => c.per_day.some((n) => n < 7));
+  const unscheduled = data.unscheduled_classes || [];
+  const short = data.class_load.filter((c) => !unscheduled.includes(c.class) && c.per_day.some((n) => n < 7));
   return `<h2>${esc(t("chk_class_t"))}</h2>
+    ${unscheduled.length ? msg("warn", esc(t("chk_unscheduled", { list: unscheduled.join(", ") }))) : ""}
     ${short.length ? msg("warn", `<div><b>${esc(t("chk_class_bad"))}</b><ul class="bul">${short.map((c) =>
       `<li>${esc(c.class)}: ${c.per_day.map((n, d) => `${esc(dayShort(d))} ${n}`).join(" · ")}</li>`).join("")}</ul></div>`)
       : msg("ok", esc(t("chk_class_ok")))}`;
