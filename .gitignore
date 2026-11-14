@@ -3,3 +3,4 @@
 __pycache__/
 *.db
 source data/
+database/seed_data.local.json

@@ -1,0 +1,1626 @@
+{
+ "subjects": [
+  {
+   "id": 1,
+   "name": "Islamic Education",
+   "name_ar": "التربية الإسلامية"
+  },
+  {
+   "id": 2,
+   "name": "Arabic",
+   "name_ar": "اللغة العربية"
+  },
+  {
+   "id": 3,
+   "name": "English",
+   "name_ar": "اللغة الإنجليزية"
+  },
+  {
+   "id": 4,
+   "name": "Math",
+   "name_ar": "الرياضيات"
+  },
+  {
+   "id": 5,
+   "name": "Science",
+   "name_ar": "العلوم"
+  },
+  {
+   "id": 6,
+   "name": "Social Studies",
+   "name_ar": "الاجتماعيات"
+  },
+  {
+   "id": 7,
+   "name": "Computer",
+   "name_ar": "الحاسوب"
+  },
+  {
+   "id": 8,
+   "name": "PE",
+   "name_ar": "التربية البدنية"
+  },
+  {
+   "id": 9,
+   "name": "Art",
+   "name_ar": "التربية الفنية"
+  },
+  {
+   "id": 10,
+   "name": "Music",
+   "name_ar": "التربية الموسيقية"
+  }
+ ],
+ "subject_hours": [
+  {
+   "grade": 1,
+   "subject": 1,
+   "per_week": 4
+  },
+  {
+   "grade": 1,
+   "subject": 2,
+   "per_week": 9
+  },
+  {
+   "grade": 1,
+   "subject": 3,
+   "per_week": 5
+  },
+  {
+   "grade": 1,
+   "subject": 4,
+   "per_week": 5
+  },
+  {
+   "grade": 1,
+   "subject": 5,
+   "per_week": 2
+  },
+  {
+   "grade": 1,
+   "subject": 6,
+   "per_week": 1
+  },
+  {
+   "grade": 1,
+   "subject": 7,
+   "per_week": 1
+  },
+  {
+   "grade": 1,
+   "subject": 8,
+   "per_week": 4
+  },
+  {
+   "grade": 1,
+   "subject": 9,
+   "per_week": 2
+  },
+  {
+   "grade": 1,
+   "subject": 10,
+   "per_week": 2
+  },
+  {
+   "grade": 2,
+   "subject": 1,
+   "per_week": 4
+  },
+  {
+   "grade": 2,
+   "subject": 2,
+   "per_week": 9
+  },
+  {
+   "grade": 2,
+   "subject": 3,
+   "per_week": 5
+  },
+  {
+   "grade": 2,
+   "subject": 4,
+   "per_week": 5
+  },
+  {
+   "grade": 2,
+   "subject": 5,
+   "per_week": 2
+  },
+  {
+   "grade": 2,
+   "subject": 6,
+   "per_week": 1
+  },
+  {
+   "grade": 2,
+   "subject": 7,
+   "per_week": 1
+  },
+  {
+   "grade": 2,
+   "subject": 8,
+   "per_week": 4
+  },
+  {
+   "grade": 2,
+   "subject": 9,
+   "per_week": 2
+  },
+  {
+   "grade": 2,
+   "subject": 10,
+   "per_week": 2
+  },
+  {
+   "grade": 3,
+   "subject": 1,
+   "per_week": 4
+  },
+  {
+   "grade": 3,
+   "subject": 2,
+   "per_week": 9
+  },
+  {
+   "grade": 3,
+   "subject": 3,
+   "per_week": 5
+  },
+  {
+   "grade": 3,
+   "subject": 4,
+   "per_week": 5
+  },
+  {
+   "grade": 3,
+   "subject": 5,
+   "per_week": 2
+  },
+  {
+   "grade": 3,
+   "subject": 6,
+   "per_week": 1
+  },
+  {
+   "grade": 3,
+   "subject": 7,
+   "per_week": 1
+  },
+  {
+   "grade": 3,
+   "subject": 8,
+   "per_week": 4
+  },
+  {
+   "grade": 3,
+   "subject": 9,
+   "per_week": 2
+  },
+  {
+   "grade": 3,
+   "subject": 10,
+   "per_week": 2
+  },
+  {
+   "grade": 4,
+   "subject": 1,
+   "per_week": 4
+  },
+  {
+   "grade": 4,
+   "subject": 2,
+   "per_week": 7
+  },
+  {
+   "grade": 4,
+   "subject": 3,
+   "per_week": 5
+  },
+  {
+   "grade": 4,
+   "subject": 4,
+   "per_week": 6
+  },
+  {
+   "grade": 4,
+   "subject": 5,
+   "per_week": 3
+  },
+  {
+   "grade": 4,
+   "subject": 6,
+   "per_week": 3
+  },
+  {
+   "grade": 4,
+   "subject": 7,
+   "per_week": 1
+  },
+  {
+   "grade": 4,
+   "subject": 8,
+   "per_week": 3
+  },
+  {
+   "grade": 4,
+   "subject": 9,
+   "per_week": 2
+  },
+  {
+   "grade": 4,
+   "subject": 10,
+   "per_week": 1
+  },
+  {
+   "grade": 5,
+   "subject": 1,
+   "per_week": 4
+  },
+  {
+   "grade": 5,
+   "subject": 2,
+   "per_week": 7
+  },
+  {
+   "grade": 5,
+   "subject": 3,
+   "per_week": 5
+  },
+  {
+   "grade": 5,
+   "subject": 4,
+   "per_week": 6
+  },
+  {
+   "grade": 5,
+   "subject": 5,
+   "per_week": 3
+  },
+  {
+   "grade": 5,
+   "subject": 6,
+   "per_week": 3
+  },
+  {
+   "grade": 5,
+   "subject": 7,
+   "per_week": 1
+  },
+  {
+   "grade": 5,
+   "subject": 8,
+   "per_week": 3
+  },
+  {
+   "grade": 5,
+   "subject": 9,
+   "per_week": 2
+  },
+  {
+   "grade": 5,
+   "subject": 10,
+   "per_week": 1
+  }
+ ],
+ "classes": [
+  {
+   "name": "1/1",
+   "grade": 1
+  },
+  {
+   "name": "2/1",
+   "grade": 1
+  },
+  {
+   "name": "3/1",
+   "grade": 1
+  },
+  {
+   "name": "4/1",
+   "grade": 1
+  },
+  {
+   "name": "1/2",
+   "grade": 2
+  },
+  {
+   "name": "2/2",
+   "grade": 2
+  },
+  {
+   "name": "3/2",
+   "grade": 2
+  },
+  {
+   "name": "4/2",
+   "grade": 2
+  },
+  {
+   "name": "1/3",
+   "grade": 3
+  },
+  {
+   "name": "2/3",
+   "grade": 3
+  },
+  {
+   "name": "3/3",
+   "grade": 3
+  },
+  {
+   "name": "4/3",
+   "grade": 3
+  },
+  {
+   "name": "1/4",
+   "grade": 4
+  },
+  {
+   "name": "2/4",
+   "grade": 4
+  },
+  {
+   "name": "3/4",
+   "grade": 4
+  },
+  {
+   "name": "4/4",
+   "grade": 4
+  },
+  {
+   "name": "1/5",
+   "grade": 5
+  },
+  {
+   "name": "2/5",
+   "grade": 5
+  },
+  {
+   "name": "3/5",
+   "grade": 5
+  },
+  {
+   "name": "4/5",
+   "grade": 5
+  }
+ ],
+ "rules": [
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 0,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 0,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 1,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 1,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 2,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 2,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 3,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 3,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 4,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 1,
+   "day": 4,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 21,
+   "day": 0,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 21,
+   "day": 1,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 21,
+   "day": 2,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 21,
+   "day": 3,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 21,
+   "day": 4,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 0,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 0,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 1,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 1,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 2,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 2,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 3,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 3,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 4,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 23,
+   "day": 4,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 0,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 0,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 1,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 1,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 2,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 2,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 3,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 3,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 4,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 24,
+   "day": 4,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 0,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 0,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 1,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 1,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 2,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 2,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 3,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 3,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 4,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 26,
+   "day": 4,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 0,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 0,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 1,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 1,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 2,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 2,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 3,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 3,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 4,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 35,
+   "day": 4,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 0,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 0,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 1,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 1,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 2,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 2,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 3,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 3,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 4,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 67,
+   "day": 4,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 0,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 0,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 1,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 1,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 2,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 2,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 3,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 3,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 4,
+   "period": 6,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 68,
+   "day": 4,
+   "period": 7,
+   "source_text": "Lighter end of day: no lessons in periods 6-7"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 75,
+   "day": 0,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 75,
+   "day": 1,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 75,
+   "day": 2,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 75,
+   "day": 3,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  },
+  {
+   "kind": "teacher_unavailable",
+   "teacher_ref": 75,
+   "day": 4,
+   "period": 1,
+   "source_text": "Lighter start of day: no lesson in period 1"
+  }
+ ],
+ "teachers": [
+  {
+   "name": "مي د.",
+   "subject": 1,
+   "classes": [
+    "2/5"
+   ]
+  },
+  {
+   "name": "نوف م.",
+   "subject": 1,
+   "classes": [
+    "2/1",
+    "4/1"
+   ]
+  },
+  {
+   "name": "نورة ذ.",
+   "subject": 1,
+   "classes": [
+    "3/4"
+   ]
+  },
+  {
+   "name": "حليمة ف.",
+   "subject": 1,
+   "classes": [
+    "1/5",
+    "4/5"
+   ]
+  },
+  {
+   "name": "عبير س.",
+   "subject": 1,
+   "classes": [
+    "2/2"
+   ]
+  },
+  {
+   "name": "نورة ص.",
+   "subject": 1,
+   "classes": [
+    "3/2"
+   ]
+  },
+  {
+   "name": "أروى ح.",
+   "subject": 1,
+   "classes": [
+    "1/2",
+    "4/2"
+   ]
+  },
+  {
+   "name": "األطاف ح.",
+   "subject": 1,
+   "classes": [
+    "1/4",
+    "3/5"
+   ]
+  },
+  {
+   "name": "ديمة ه.",
+   "subject": 1,
+   "classes": [
+    "1/1",
+    "3/1"
+   ]
+  },
+  {
+   "name": "طفلة م.",
+   "subject": 1,
+   "classes": [
+    "1/3",
+    "4/3"
+   ]
+  },
+  {
+   "name": "موضي ع.",
+   "subject": 1,
+   "classes": [
+    "2/3",
+    "3/3"
+   ]
+  },
+  {
+   "name": "نورة م.",
+   "subject": 1,
+   "classes": [
+    "2/4",
+    "4/4"
+   ]
+  },
+  {
+   "name": "عايشة ع.",
+   "subject": 2,
+   "classes": [
+    "2/5",
+    "3/5"
+   ]
+  },
+  {
+   "name": "فاطمة ج.",
+   "subject": 2,
+   "classes": [
+    "2/2"
+   ]
+  },
+  {
+   "name": "افراح ص.",
+   "subject": 2,
+   "classes": [
+    "1/4",
+    "3/4"
+   ]
+  },
+  {
+   "name": "مريم ي.",
+   "subject": 2,
+   "classes": [
+    "2/1",
+    "4/1"
+   ]
+  },
+  {
+   "name": "فاطمة م.",
+   "subject": 2,
+   "classes": [
+    "2/4",
+    "4/4"
+   ]
+  },
+  {
+   "name": "دلال ش.",
+   "subject": 2,
+   "classes": [
+    "1/2"
+   ]
+  },
+  {
+   "name": "حنان أ.",
+   "subject": 2,
+   "classes": [
+    "1/5"
+   ]
+  },
+  {
+   "name": "آلاء غ.",
+   "subject": 2,
+   "classes": [
+    "3/2",
+    "4/2"
+   ]
+  },
+  {
+   "name": "شاهندا",
+   "subject": 2,
+   "classes": [
+    "4/5"
+   ]
+  },
+  {
+   "name": "دانة ح.",
+   "subject": 2,
+   "classes": [
+    "1/3",
+    "2/3"
+   ]
+  },
+  {
+   "name": "سارة ف.",
+   "subject": 2,
+   "classes": [
+    "3/1"
+   ]
+  },
+  {
+   "name": "سارة ش.",
+   "subject": 2,
+   "classes": [
+    "1/1"
+   ]
+  },
+  {
+   "name": "عايشة م.",
+   "subject": 2,
+   "classes": [
+    "3/3",
+    "4/3"
+   ]
+  },
+  {
+   "name": "بشاير د.",
+   "subject": 3,
+   "classes": [
+    "1/2"
+   ]
+  },
+  {
+   "name": "أماني خ.",
+   "subject": 3,
+   "classes": [
+    "1/3",
+    "2/3"
+   ]
+  },
+  {
+   "name": "نورة م. (2)",
+   "subject": 3,
+   "classes": [
+    "2/2",
+    "3/2"
+   ]
+  },
+  {
+   "name": "لولوة إ.",
+   "subject": 3,
+   "classes": [
+    "3/4",
+    "4/4"
+   ]
+  },
+  {
+   "name": "هديل ض.",
+   "subject": 3,
+   "classes": [
+    "2/1",
+    "4/1"
+   ]
+  },
+  {
+   "name": "شهد د.",
+   "subject": 3,
+   "classes": [
+    "1/4",
+    "2/4"
+   ]
+  },
+  {
+   "name": "مي ش.",
+   "subject": 3,
+   "classes": [
+    "1/5",
+    "4/5"
+   ]
+  },
+  {
+   "name": "تهاني ع.",
+   "subject": 3,
+   "classes": [
+    "3/5"
+   ]
+  },
+  {
+   "name": "مريم غ.",
+   "subject": 3,
+   "classes": [
+    "3/3",
+    "4/3"
+   ]
+  },
+  {
+   "name": "فاطمة م. (2)",
+   "subject": 3,
+   "classes": [
+    "1/1",
+    "3/1"
+   ]
+  },
+  {
+   "name": "حنبن و.",
+   "subject": 3,
+   "classes": [
+    "4/2"
+   ]
+  },
+  {
+   "name": "يسرا ف.",
+   "subject": 3,
+   "classes": [
+    "2/5"
+   ]
+  },
+  {
+   "name": "مزنة س.",
+   "subject": 4,
+   "classes": [
+    "2/4"
+   ]
+  },
+  {
+   "name": "الشيماء",
+   "subject": 4,
+   "classes": [
+    "1/3",
+    "4/3",
+    "4/4"
+   ]
+  },
+  {
+   "name": "آية ح.",
+   "subject": 4,
+   "classes": [
+    "2/2",
+    "3/5"
+   ]
+  },
+  {
+   "name": "غدير غ.",
+   "subject": 4,
+   "classes": [
+    "2/3",
+    "3/3",
+    "2/5"
+   ]
+  },
+  {
+   "name": "بدور س.",
+   "subject": 4,
+   "classes": [
+    "1/1",
+    "3/1",
+    "1/5"
+   ]
+  },
+  {
+   "name": "روان ا.",
+   "subject": 4,
+   "classes": [
+    "3/2",
+    "1/4"
+   ]
+  },
+  {
+   "name": "بتول ح.",
+   "subject": 4,
+   "classes": [
+    "1/2",
+    "4/2",
+    "4/5"
+   ]
+  },
+  {
+   "name": "نور ع.",
+   "subject": 4,
+   "classes": [
+    "2/1",
+    "4/1",
+    "3/4"
+   ]
+  },
+  {
+   "name": "فاطمة ر.",
+   "subject": 5,
+   "classes": [
+    "2/4"
+   ]
+  },
+  {
+   "name": "هناء ق.",
+   "subject": 5,
+   "classes": [
+    "2/2",
+    "3/4"
+   ]
+  },
+  {
+   "name": "نورة ن.",
+   "subject": 5,
+   "classes": [
+    "4/3",
+    "3/5"
+   ]
+  },
+  {
+   "name": "دلال ت.",
+   "subject": 5,
+   "classes": [
+    "3/2",
+    "2/5"
+   ]
+  },
+  {
+   "name": "حنان ب.",
+   "subject": 5,
+   "classes": [
+    "4/1",
+    "1/5"
+   ]
+  },
+  {
+   "name": "فاطمة ي.",
+   "subject": 5,
+   "classes": [
+    "4/2",
+    "4/5"
+   ]
+  },
+  {
+   "name": "فاطمة م. (3)",
+   "subject": 5,
+   "classes": [
+    "1/2",
+    "4/4"
+   ]
+  },
+  {
+   "name": "عايشة خ.",
+   "subject": 5,
+   "classes": [
+    "1/1",
+    "3/3"
+   ]
+  },
+  {
+   "name": "حنان ق.",
+   "subject": 5,
+   "classes": [
+    "3/1",
+    "1/4"
+   ]
+  },
+  {
+   "name": "أنيسة س.",
+   "subject": 5,
+   "classes": [
+    "2/1",
+    "1/3",
+    "2/3"
+   ]
+  },
+  {
+   "name": "هيفاء ب.",
+   "subject": 6,
+   "classes": [
+    "1/3"
+   ]
+  },
+  {
+   "name": "سندس ع.",
+   "subject": 6,
+   "classes": [
+    "1/1",
+    "2/1",
+    "3/1",
+    "4/1",
+    "1/2",
+    "2/2",
+    "3/2",
+    "4/2",
+    "2/3",
+    "3/3",
+    "4/3"
+   ]
+  },
+  {
+   "name": "عذاري ح.",
+   "subject": 6,
+   "classes": [
+    "1/5",
+    "2/5",
+    "3/5",
+    "4/5"
+   ]
+  },
+  {
+   "name": "سارة خ.",
+   "subject": 6,
+   "classes": [
+    "1/4",
+    "2/4",
+    "3/4",
+    "4/4"
+   ]
+  },
+  {
+   "name": "سارة س.",
+   "subject": 7,
+   "classes": [
+    "1/2",
+    "2/2",
+    "3/2",
+    "4/2",
+    "1/3",
+    "2/3",
+    "3/3",
+    "4/3",
+    "1/5",
+    "2/5",
+    "3/5",
+    "4/5"
+   ]
+  },
+  {
+   "name": "روان خ.",
+   "subject": 7,
+   "classes": [
+    "1/1",
+    "2/1",
+    "3/1",
+    "4/1",
+    "1/4",
+    "2/4",
+    "3/4",
+    "4/4"
+   ]
+  },
+  {
+   "name": "هناء ج.",
+   "subject": 8,
+   "classes": [
+    "2/5"
+   ]
+  },
+  {
+   "name": "رشا ع.",
+   "subject": 8,
+   "classes": [
+    "4/2",
+    "2/3"
+   ]
+  },
+  {
+   "name": "دعاء ج.",
+   "subject": 8,
+   "classes": [
+    "1/2",
+    "2/2",
+    "4/5"
+   ]
+  },
+  {
+   "name": "شهد ب.",
+   "subject": 8,
+   "classes": [
+    "3/2",
+    "1/4",
+    "4/4"
+   ]
+  },
+  {
+   "name": "أسماء ع.",
+   "subject": 8,
+   "classes": [
+    "4/1",
+    "2/4",
+    "3/4"
+   ]
+  },
+  {
+   "name": "حصة ج.",
+   "subject": 8,
+   "classes": [
+    "1/1",
+    "4/3"
+   ]
+  },
+  {
+   "name": "زينب ع.",
+   "subject": 8,
+   "classes": [
+    "3/1",
+    "1/5",
+    "3/5"
+   ]
+  },
+  {
+   "name": "بدرية ح.",
+   "subject": 8,
+   "classes": [
+    "2/1",
+    "1/3",
+    "3/3"
+   ]
+  },
+  {
+   "name": "زينب ع. (2)",
+   "subject": 9,
+   "classes": [
+    "1/4"
+   ]
+  },
+  {
+   "name": "شهد ش.",
+   "subject": 9,
+   "classes": [
+    "2/3",
+    "3/3",
+    "1/5"
+   ]
+  },
+  {
+   "name": "دعاء أ.",
+   "subject": 9,
+   "classes": [
+    "3/2",
+    "4/2",
+    "4/4"
+   ]
+  },
+  {
+   "name": "سميرة ك.",
+   "subject": 9,
+   "classes": [
+    "1/3",
+    "4/3",
+    "4/5"
+   ]
+  },
+  {
+   "name": "مي ع.",
+   "subject": 9,
+   "classes": [
+    "1/2",
+    "2/2",
+    "2/5",
+    "3/5"
+   ]
+  },
+  {
+   "name": "انفال ع.",
+   "subject": 9,
+   "classes": [
+    "1/1",
+    "3/1",
+    "3/4"
+   ]
+  },
+  {
+   "name": "جنان م.",
+   "subject": 9,
+   "classes": [
+    "2/1",
+    "4/1",
+    "2/4"
+   ]
+  },
+  {
+   "name": "دلال ف.",
+   "subject": 10,
+   "classes": [
+    "2/3",
+    "4/3",
+    "1/4",
+    "2/4",
+    "3/4",
+    "4/4"
+   ]
+  },
+  {
+   "name": "نجود ع.",
+   "subject": 10,
+   "classes": [
+    "1/3",
+    "3/3",
+    "1/5",
+    "2/5",
+    "3/5",
+    "4/5"
+   ]
+  },
+  {
+   "name": "دانة ق.",
+   "subject": 10,
+   "classes": [
+    "1/1",
+    "2/1",
+    "3/1",
+    "4/1",
+    "1/2",
+    "2/2",
+    "3/2",
+    "4/2"
+   ]
+  }
+ ]
+}
