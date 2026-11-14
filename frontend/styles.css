@@ -358,3 +358,27 @@ fieldset.cover legend { padding: 0; }
 .bad { color: var(--err); }
 #who-pick .chips, .days .chips { margin-top: 6px; }
 @media (max-width: 480px) { .seg { display: grid; grid-template-columns: 1fr 1fr; } .seg button { min-height: 44px; } }
+
+/* ---------- top bar fix: wraps instead of overflowing; equal buttons; no clipped text ---------- */
+.topbar { box-sizing: border-box; max-width: 100%; }
+.ibtn, .brand { box-sizing: border-box; height: var(--btn-h); min-width: var(--btn-h); flex: none; line-height: 1; }
+.ibtn { padding-inline: 1.1em; }
+.ibtn.square, .brand { padding: 0; width: var(--btn-h); }
+.topbar .left { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.tabs a { white-space: nowrap; line-height: 1.5; }
+.tabs a span { padding-block: .12em; }      /* room for Arabic marks and descenders inside the clipped label */
+@media (max-width: 1100px) {
+  .topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px var(--gap); }
+  .topbar .left { flex: 1 1 0; }
+  .topbar .brand { order: 2; }
+  .topbar .tabs { order: 3; flex: 1 1 100%; max-width: 100%; justify-content: center; box-sizing: border-box; }
+}
+@media (max-width: 900px) {
+  .ibtn { width: var(--btn-h); padding: 0; justify-content: center; }     /* icon-only, all the same square */
+}
+@media (max-width: 480px) {
+  .topbar { gap: 8px; }
+  .tabs { gap: 2px; padding: 4px; }
+  .tabs a { padding: .6em .9em; font-size: 13px; }
+  .tabs .thumb { top: 4px; bottom: 4px; }
+}
