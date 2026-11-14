@@ -26,7 +26,7 @@ Madar is an AI-assisted school timetable app for an elementary school in Kuwait
 | --- | --- | --- | --- |
 | Frontend | Plain HTML + CSS + JavaScript (`fetch` calls to the API). No build step | frontend teammate | `frontend/` |
 | Backend | Python 3.12+, **FastAPI**, **OR-Tools**, uvicorn | saitama-205 | `backend/` |
-| Database | **SQLite** (one file: `database/madar.db`) + schema + seed data | database teammate | `database/` |
+| Database | **SQLite** (one file: `database/madar.db`) + schema + seed data | saitama-205 | `database/` |
 
 - The backend serves the frontend files too, so the whole app runs with **one command**.
 - Run: `cd backend` → `pip install -r requirements.txt` → `uvicorn main:app --reload` → open http://localhost:8000
