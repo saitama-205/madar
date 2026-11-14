@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 
 from database.db import get_connection
 from analytics import compute
+from class_setup import auto_assign_teachers
 from errors import ApiError
 from solver import generate_timetable
 
@@ -45,29 +46,37 @@ def list_classes(db: sqlite3.Connection = Depends(get_db)):
 
 @router.post("/classes", status_code=201)
 def create_class(body: ClassIn, db: sqlite3.Connection = Depends(get_db)):
-    """Add the next free section to a grade, then regenerate the timetable for the whole school.
+    """Add the next free section to a grade and set it up completely:
+    1. create the class (its lessons per subject come from the grade's subject_hours),
+    2. assign a teacher for every subject (see class_setup.py),
+    3. regenerate the timetable for the whole school.
 
-    The class is saved first and is kept whatever happens next. If generation fails (for example the new class has
-    no teachers yet), the old timetable is untouched and the error comes back as {error, message}."""
+    Steps 1 and 2 are saved before step 3 and are kept whatever happens. If generation fails, the old timetable is
+    untouched and the error comes back as {error, message}."""
     used = {int(r["name"].split("/")[0]) for r in db.execute("SELECT name FROM classes WHERE grade = ?", (body.grade,))}
     section = next(s for s in range(1, len(used) + 2) if s not in used)  # smallest unused: fills gaps, else max + 1
     name = f"{section}/{body.grade}"
-    with db:
+    with db:  # class + teacher assignments are saved together
         new_id = db.execute("INSERT INTO classes (name, grade) VALUES (?, ?)", (name, body.grade)).lastrowid
+        assignments = auto_assign_teachers(db, new_id, body.grade)
+    flagged = [f"{a['teacher']} for {a['subject']}" for a in assignments if a["over_capacity"]]
 
     try:
         result = generate_timetable(db)
     except ApiError as e:
-        raise ApiError(e.status, e.error, f"Class {name} was added, but the timetable could not be generated: "
-                                          f"{e.message} The previous timetable was kept.") from e
+        extra = f" Teachers over their weekly limit: {', '.join(flagged)}." if flagged and e.error != "teacher_overloaded" else ""
+        raise ApiError(e.status, e.error, f"Class {name} was added and its teachers were assigned, but the timetable "
+                                          f"could not be generated: {e.message}{extra} The previous timetable was kept.") from e
     except Exception as e:  # never lose the class because of an unexpected solver problem
-        raise ApiError(500, "generation_failed", f"Class {name} was added, but the timetable could not be generated. "
-                                                 "The previous timetable was kept.") from e
+        raise ApiError(500, "generation_failed", f"Class {name} was added and its teachers were assigned, but the "
+                                                 "timetable could not be generated. The previous timetable was kept.") from e
+    warnings = list(result.get("warnings", []))
+    warnings += [f"No teacher exists for {a['subject']}, so it could not be assigned." for a in assignments if a["teacher_id"] is None]
     violations = compute(db)["rule_check"]["violations"]
     classes = db.execute("SELECT COUNT(DISTINCT class_id) FROM lessons").fetchone()[0]
-    return {"id": new_id, "name": name, "grade": body.grade,
+    return {"id": new_id, "name": name, "grade": body.grade, "assignments": assignments,
             "generation": {"ok": True, "classes": classes, "lessons_count": result["lessons_count"],
-                           "seconds": result["seconds"], "violations": violations}}
+                           "seconds": result["seconds"], "violations": violations, "warnings": warnings}}
 
 
 # ---------- teachers ----------

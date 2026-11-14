@@ -108,13 +108,31 @@ def test_saved_rules_are_kept(api):
 
 # ---------- errors say what is wrong, and never wipe the old timetable ----------
 
-def test_missing_teachers_are_named(api):
-    api.post("/api/timetable/generate")
-    api.post("/api/classes", json={"grade": 1})  # new class 5/1 has no teachers
+def test_class_without_teachers_is_skipped_with_a_warning(api):
+    api.db.execute("INSERT INTO classes (name, grade) VALUES ('5/1', 1)")  # new class with no teachers
+    api.db.commit()
+    r = api.post("/api/timetable/generate")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["lessons_count"] == 700 and len(body["warnings"]) == 1
+    assert "5/1" in body["warnings"][0] and "Arabic" in body["warnings"][0] and "skipped" in body["warnings"][0]
+    assert one(api.db, "SELECT COUNT(*) FROM lessons l JOIN classes c ON c.id = l.class_id WHERE c.name = '5/1'") == 0
+
+
+def test_skipped_class_does_not_break_a_pin_rule_on_it(api):
+    api.db.execute("INSERT INTO classes (name, grade) VALUES ('5/1', 1)")
+    cid = api.db.execute("SELECT id FROM classes WHERE name = '5/1'").fetchone()[0]
+    api.db.commit()
+    r = api.post("/api/rules", json={"kind": "pin_lesson", "params": {"class_id": cid, "subject_id": 4, "day": 0, "period": 1}})
+    assert r.status_code == 201
+    assert api.post("/api/timetable/generate").status_code == 200
+
+
+def test_all_classes_missing_teachers_is_still_an_error(api):
+    api.db.execute("DELETE FROM teacher_classes")
+    api.db.commit()
     r = api.post("/api/timetable/generate")
     assert r.status_code == 422 and r.json()["error"] == "missing_teachers"
-    assert "5/1" in r.json()["message"] and "Arabic" in r.json()["message"]
-    assert one(api.db, "SELECT COUNT(*) FROM lessons") == 700  # old timetable untouched
 
 
 def test_hours_that_do_not_add_up_to_35(api):
