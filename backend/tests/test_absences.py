@@ -110,7 +110,7 @@ def test_ai_failure_falls_back_and_stops_calling(api, scene, monkeypatch):
 def test_language_ar_template_when_no_key(api, scene, monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.setattr(llm, "ENV_FILE", llm.ENV_FILE.with_name("nope.env"))
-    item = api.post("/api/absences", json={"teacher_id": scene["a"], "day": 1, "language": "ar"}).json()[0]
+    item = api.post("/api/absences", json={"teacher_id": scene["a"], "day": 1, "lang": "ar"}).json()[0]
     assert item["explanation_source"] == "template"
     assert "الحصة 2" in item["explanation"] and "الرياضيات" in item["explanation"]
 
@@ -124,10 +124,18 @@ def test_language_is_passed_to_the_ai(api, scene, monkeypatch):
         return 200, json.dumps({"choices": [{"message": {"content": "جملة"}}]})
 
     monkeypatch.setattr(llm, "_send", fake)
-    api.post("/api/absences", json={"teacher_id": scene["a"], "day": 1, "language": "ar"})
+    api.post("/api/absences", json={"teacher_id": scene["a"], "day": 1, "lang": "ar"})
     api.post("/api/absences", json={"teacher_id": scene["a"], "day": 1})
     assert "Write it in Arabic" in sent[0] and "Write it in English" in sent[1]
 
 
 def test_bad_language_is_422(api, scene):
-    assert api.post("/api/absences", json={"teacher_id": scene["a"], "day": 1, "language": "fr"}).status_code == 422
+    assert api.post("/api/absences", json={"teacher_id": scene["a"], "day": 1, "lang": "fr"}).status_code == 422
+
+
+def test_old_language_name_still_works_and_lang_wins(api, scene, monkeypatch):
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.setattr(llm, "ENV_FILE", llm.ENV_FILE.with_name("nope.env"))
+    base = {"teacher_id": scene["a"], "day": 1}
+    assert "الحصة 2" in api.post("/api/absences", json={**base, "language": "ar"}).json()[0]["explanation"]
+    assert "period 2" in api.post("/api/absences", json={**base, "lang": "en", "language": "ar"}).json()[0]["explanation"]

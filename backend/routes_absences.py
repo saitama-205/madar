@@ -17,7 +17,8 @@ router = APIRouter(prefix="/api")
 class AbsenceIn(BaseModel):
     teacher_id: int
     day: int = Field(ge=0, le=4)
-    language: Literal["en", "ar"] = "en"  # the UI language; the explanation sentence is written in it
+    lang: Literal["en", "ar"] | None = None  # the UI language; the explanation sentence is written in it (default "en")
+    language: Literal["en", "ar"] | None = None  # older name for the same thing; "lang" wins if both are sent
 
 
 @router.post("/absences")
@@ -31,15 +32,16 @@ def absences(body: AbsenceIn, db: sqlite3.Connection = Depends(get_db)):
         raise ApiError(409, "no_timetable", "There is no timetable yet. Generate one first.")
 
     result = find_affected(db, body.teacher_id, body.day)
+    lang = body.lang or body.language or "en"
     ai_ok = llm.is_configured()
     for item in result:
         top = item["substitutes"][0] if item["substitutes"] else None
         if top is None:
             item["explanation"], item["explanation_source"] = None, None
         elif ai_ok:
-            item["explanation"], item["explanation_source"] = explain_pick(teacher["name"], item, top, body.language)
+            item["explanation"], item["explanation_source"] = explain_pick(teacher["name"], item, top, lang)
             if item["explanation_source"] == "template":
                 ai_ok = False  # the AI just failed: do not wait for it again for every other lesson
         else:
-            item["explanation"], item["explanation_source"] = template_sentence(item, top, body.language), "template"
+            item["explanation"], item["explanation_source"] = template_sentence(item, top, lang), "template"
     return result
