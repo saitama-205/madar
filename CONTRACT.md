@@ -38,7 +38,7 @@ Madar is an AI-assisted school timetable app for an elementary school in Kuwait
 
 - **Days:** `0`=Sunday, `1`=Monday, `2`=Tuesday, `3`=Wednesday, `4`=Thursday
 - **Periods:** `1` to `7` (1-based)
-- **Class name:** `"section/grade"`, e.g. `"2/5"` = section 2 of grade 5. Grades 1–5, sections 1–4
+- **Class name:** `"section/grade"`, e.g. `"2/5"` = section 2 of grade 5. Grades 1–5. The school starts with sections 1–4 in every grade; a class added later gets the next free section number (the smallest unused one, so 5, 6, … once 1–4 exist). No delete endpoint: `POST /api/reset` brings back the original classes
 - All API paths start with `/api`. All requests and responses are JSON (only exceptions: the `.xlsx` template download and the `.xlsx` upload in the import endpoints)
 - Errors return `{ "error": "short_code", "message": "human sentence" }` with a 4xx/5xx status
 - Secrets (AI key) go in `.env`, never in the code or on GitHub

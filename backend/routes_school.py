@@ -9,8 +9,6 @@ from errors import ApiError
 
 router = APIRouter(prefix="/api")
 
-MAX_SECTIONS = 4  # contract: sections 1-4 in every grade
-
 
 def get_db():
     """One database connection per request, always closed afterwards."""
@@ -47,10 +45,8 @@ def list_classes(db: sqlite3.Connection = Depends(get_db)):
 def create_class(body: ClassIn, db: sqlite3.Connection = Depends(get_db)):
     """Add the next free section to a grade. It starts with no teachers, so Generate will say who is missing."""
     used = {int(r["name"].split("/")[0]) for r in db.execute("SELECT name FROM classes WHERE grade = ?", (body.grade,))}
-    free = [s for s in range(1, MAX_SECTIONS + 1) if s not in used]
-    if not free:
-        raise ApiError(409, "grade_full", f"Grade {body.grade} already has all {MAX_SECTIONS} sections.")
-    name = f"{free[0]}/{body.grade}"
+    section = next(s for s in range(1, len(used) + 2) if s not in used)  # smallest unused: fills gaps, else max + 1
+    name = f"{section}/{body.grade}"
     with db:
         new_id = db.execute("INSERT INTO classes (name, grade) VALUES (?, ?)", (name, body.grade)).lastrowid
     return {"id": new_id, "name": name, "grade": body.grade}

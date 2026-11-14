@@ -81,11 +81,14 @@ def test_timetable_unknown_or_bad_id(api):
 
 # ---------- POST /api/classes ----------
 
-def test_cannot_add_a_class_when_all_four_sections_exist(api):
-    r = api.post("/api/classes", json={"grade": 3})
-    assert r.status_code == 409
-    assert r.json()["error"] == "grade_full"
-    assert one(api.db, "SELECT COUNT(*) FROM classes") == 20
+def test_adding_a_class_to_a_full_grade_gets_section_5_then_6(api):
+    first = api.post("/api/classes", json={"grade": 3})
+    assert first.status_code == 201
+    assert first.json()["name"] == "5/3" and first.json()["grade"] == 3
+    assert api.post("/api/classes", json={"grade": 3}).json()["name"] == "6/3"
+    assert one(api.db, "SELECT COUNT(*) FROM classes") == 22
+    names = [c["name"] for c in api.get("/api/classes").json() if c["grade"] == 3]
+    assert names == ["1/3", "2/3", "3/3", "4/3", "5/3", "6/3"]  # still sorted by section number
 
 
 def test_new_class_gets_the_next_free_section(api):
