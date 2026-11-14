@@ -18,6 +18,7 @@ from collections import defaultdict
 from ortools.sat.python import cp_model
 
 from errors import ApiError
+from rule_params import parse_params
 
 DAYS = range(5)  # 0 = Sunday .. 4 = Thursday
 PERIODS = range(1, 8)  # 1..7
@@ -98,32 +99,21 @@ class Problem:
             bad = lambda why: ApiError(422, "invalid_rule", f"Rule {r['id']} ({r['kind']}) cannot be used: {why} "
                                                             "Delete or fix it, then try again.")
             try:
-                p = json.loads(r["params"])
-                if r["kind"] == "subject_not_in_period":
-                    sid, period = int(p["subject_id"]), int(p["period"])
-                    if sid not in self.subjects:
-                        raise bad("that subject does not exist.")
-                    if period not in PERIODS:
-                        raise bad("the period must be 1 to 7.")
-                    self.subject_not_in[sid].add(period)
-                elif r["kind"] == "teacher_unavailable":
-                    tid, day, period = int(p["teacher_id"]), int(p["day"]), int(p["period"])
-                    if tid not in self.teachers:
-                        raise bad("that teacher does not exist.")
-                    if day not in DAYS or period not in PERIODS:
-                        raise bad("the day must be 0 to 4 and the period 1 to 7.")
-                    self.unavailable[tid].add((day, period))
-                elif r["kind"] == "pin_lesson":
-                    cid, sid, day, period = int(p["class_id"]), int(p["subject_id"]), int(p["day"]), int(p["period"])
-                    if (cid, sid) not in self.needed:
-                        raise bad("that class does not have that subject.")
-                    if day not in DAYS or period not in PERIODS:
-                        raise bad("the day must be 0 to 4 and the period 1 to 7.")
-                    self.pins.append((cid, sid, day, period))
-                else:
-                    raise bad("unknown rule kind.")
-            except (KeyError, TypeError, ValueError):
-                raise bad("its settings are incomplete or not numbers.")
+                p = parse_params(r["kind"], json.loads(r["params"]))  # same validation as the rules endpoints
+            except ValueError as why:
+                raise bad(str(why))
+            if r["kind"] == "subject_not_in_period":
+                if p.subject_id not in self.subjects:
+                    raise bad("that subject does not exist.")
+                self.subject_not_in[p.subject_id].add(p.period)
+            elif r["kind"] == "teacher_unavailable":
+                if p.teacher_id not in self.teachers:
+                    raise bad("that teacher does not exist.")
+                self.unavailable[p.teacher_id].add((p.day, p.period))
+            else:  # pin_lesson
+                if (p.class_id, p.subject_id) not in self.needed:
+                    raise bad("that class does not have that subject.")
+                self.pins.append((p.class_id, p.subject_id, p.day, p.period))
 
     def check_teacher_loads(self):
         load = defaultdict(int)

@@ -18,6 +18,7 @@ from database.db import get_connection  # noqa: E402
 from database.seed import seed, seed_if_empty  # noqa: E402
 from errors import ApiError  # noqa: E402
 from routes_school import router as school_router  # noqa: E402
+from routes_rules import router as rules_router  # noqa: E402
 from routes_timetable import router as timetable_router  # noqa: E402
 
 FRONTEND_DIR = ROOT / "frontend"
@@ -73,7 +74,7 @@ def create_app(frontend_dir: Path = FRONTEND_DIR) -> FastAPI:
 
     app.include_router(school_router)  # subjects, classes, teachers, timetable
     app.include_router(timetable_router)  # generate
-    # Added in a later step: rules.
+    app.include_router(rules_router)  # rules
 
     # Must be LAST: "/" matches everything, so API routes above are checked first.
     if frontend_dir.is_dir():
