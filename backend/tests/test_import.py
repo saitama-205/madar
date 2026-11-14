@@ -174,7 +174,7 @@ def test_confirm_replaces_everything_and_generate_works(api):
     preview = upload(api, seed_workbook()).json()
 
     r = api.post("/api/import/confirm", json=preview)
-    assert r.status_code == 200 and r.json() == {"ok": True}
+    assert r.status_code == 200 and r.json()["ok"] is True
     c = counts(api.db)
     assert c["classes"] == 20 and c["teachers"] == 79 and c["subjects"] == 10 and c["subject_hours"] == 50
     assert c["rules"] == 0 and c["lessons"] == 0  # replaced, including rules and the old timetable

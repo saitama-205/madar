@@ -115,4 +115,4 @@ def delete_rule(rule_id: int, db: sqlite3.Connection = Depends(get_db)):
         deleted = db.execute("DELETE FROM rules WHERE id = ?", (rule_id,)).rowcount
     if not deleted:
         raise ApiError(404, "not_found", f"There is no rule with id {rule_id}.")
-    return {"ok": True}
+    return {"ok": True, **regenerate(db)}

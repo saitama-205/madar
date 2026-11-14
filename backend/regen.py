@@ -22,7 +22,7 @@ def current_violations(db: sqlite3.Connection) -> list[str]:
 def regenerate(db: sqlite3.Connection) -> dict:
     if os.environ.get("MADAR_AUTO_REGENERATE", "1") == "0":
         return {"generated": False, "violations": current_violations(db),
-                "warnings": ["Automatic regeneration is switched off."], "error": "regeneration_off"}
+                "warnings": ["Automatic regeneration is switched off."]}
     try:
         result = solver.generate_timetable(db)
     except ApiError as e:

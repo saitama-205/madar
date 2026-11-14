@@ -6,6 +6,7 @@ from fastapi.responses import Response
 
 from errors import ApiError
 from excel_import import MAX_FILE_BYTES, ConfirmIn, build_template, parse_upload, save_import, validate_import
+from regen import regenerate
 from routes_school import get_db
 
 router = APIRouter(prefix="/api")
@@ -33,4 +34,4 @@ def confirm(body: ConfirmIn, db: sqlite3.Connection = Depends(get_db)):
     """Save the (possibly edited) preview and REPLACE all current data, including lessons and rules.
     Everything is checked first; if anything is wrong nothing is changed. Run Generate afterwards."""
     save_import(db, validate_import(body))
-    return {"ok": True}
+    return {"ok": True, **regenerate(db)}

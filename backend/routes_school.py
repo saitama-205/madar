@@ -8,6 +8,7 @@ from database.db import get_connection
 from analytics import compute
 from class_setup import auto_assign_teachers
 from errors import ApiError
+from regen import regenerate
 from solver import generate_timetable
 
 router = APIRouter(prefix="/api")
@@ -75,6 +76,7 @@ def create_class(body: ClassIn, db: sqlite3.Connection = Depends(get_db)):
     violations = compute(db)["rule_check"]["violations"]
     classes = db.execute("SELECT COUNT(DISTINCT class_id) FROM lessons").fetchone()[0]
     return {"id": new_id, "name": name, "grade": body.grade, "assignments": assignments,
+            "generated": True, "violations": violations, "warnings": warnings,
             "generation": {"ok": True, "classes": classes, "lessons_count": result["lessons_count"],
                            "seconds": result["seconds"], "violations": violations, "warnings": warnings}}
 
@@ -125,7 +127,7 @@ def create_teacher(body: TeacherIn, db: sqlite3.Connection = Depends(get_db)):
         new_id = db.execute("INSERT INTO teachers (name, subject_id) VALUES (?, ?)", (name, body.subject_id)).lastrowid
         db.executemany("INSERT INTO teacher_classes (teacher_id, class_id) VALUES (?, ?)",
                        [(new_id, c) for c in class_ids])
-    return teachers_with_classes(db, "WHERE id = ?", (new_id,))[0]
+    return {**teachers_with_classes(db, "WHERE id = ?", (new_id,))[0], **regenerate(db)}
 
 
 # ---------- timetable ----------
