@@ -4,10 +4,12 @@
 :root{--dur:1.2s;--ease:cubic-bezier(.7,0,.25,1);--dx:0px;--dy:0px;--s:.25;
   /* arrow and its tab in the white margin */
   --cue:54px;                              /* arrow box, 15% smaller than before (64 px) */
-  --tw:clamp(96px,8.5vw,164px);            /* tab width */
-  --th:clamp(58px,4.2vw,80px);             /* tab height (how far the white margin rises) */
-  --tf:clamp(12px,1.2vw,22px);             /* fillet where the tab meets the margin */
-  --tr:clamp(14px,1.5vw,28px)}             /* tab's bottom corners */
+  --th:clamp(30px,2.4vw,46px);             /* how far the white margin rises (its thickness) */
+  --tw:clamp(76px,6vw,112px);              /* tab width at its waist */
+  --fx:clamp(40px,6vw,110px);              /* how far each smooth curve reaches into the margin */
+  --bx:clamp(12px,1.2vw,22px)}             /* width of the tab's bottom corners */
+/* Each side of the tab is one smooth S-curve: a long concave sweep from the margin (top half of --th)
+   flowing into a short convex corner at the bottom (bottom half), meeting vertically half way down. */
 
 html.lock{overflow:hidden}
 html.instant *,html.instant *::before,html.instant *::after{transition:none!important}
@@ -55,17 +57,17 @@ html:not(.go) .aur.b .blob,.done .aur.a .blob,.slide:not(.vis) .blob{animation-p
 .go .notch{transform:translateY(100%);transition:transform .4s ease}
 .notch i{position:absolute;display:block}
 .sh{bottom:0;height:var(--th);width:calc(50% - var(--tw)/2);background:#fff}
-.sh.l{left:0;border-top-right-radius:var(--tf)}
-.sh.r{right:0;border-top-left-radius:var(--tf)}
+.sh.l{left:0;border-top-right-radius:var(--fx) calc(var(--th)/2)}
+.sh.r{right:0;border-top-left-radius:var(--fx) calc(var(--th)/2)}
 .cn{bottom:var(--th);width:var(--r);height:var(--r)}                     /* the panel's own bottom corners */
 .cn.l{left:0;background:radial-gradient(circle at 100% 0,transparent calc(var(--r) - .5px),#fff var(--r))}
 .cn.r{right:0;background:radial-gradient(circle at 0 0,transparent calc(var(--r) - .5px),#fff var(--r))}
-.tc{bottom:0;width:var(--tr);height:var(--tr)}                           /* the tab's bottom corners */
-.tc.l{left:calc(50% - var(--tw)/2);background:radial-gradient(circle at 100% 0,transparent calc(var(--tr) - .5px),#fff var(--tr))}
-.tc.r{right:calc(50% - var(--tw)/2);background:radial-gradient(circle at 0 0,transparent calc(var(--tr) - .5px),#fff var(--tr))}
+.tc{bottom:0;width:var(--bx);height:calc(var(--th)/2)}                  /* the tab's bottom corners */
+.tc.l{left:calc(50% - var(--tw)/2);background:radial-gradient(var(--bx) calc(var(--th)/2) at 100% 0,transparent 96%,#fff 100%)}
+.tc.r{right:calc(50% - var(--tw)/2);background:radial-gradient(var(--bx) calc(var(--th)/2) at 0 0,transparent 96%,#fff 100%)}
 
-/* ---- the arrow, inside its tab ---- */
-.cue{position:absolute;z-index:4;left:50%;bottom:calc((var(--th) - var(--cue))/2);transform:translateX(-50%);
+/* ---- the arrow, at the top of its tab ---- */
+.cue{position:absolute;z-index:4;left:50%;bottom:calc(var(--th) - var(--cue)*.42);transform:translateX(-50%);
   width:var(--cue);height:var(--cue);padding:0;border:0;border-radius:999px;background:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:opacity .3s ease .9s}
 .cue svg{width:48px;height:48px;filter:url(#glass-sm);animation:bob 1.6s ease-in-out infinite}   /* 15% smaller (was 56) */
