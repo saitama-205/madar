@@ -162,3 +162,54 @@ export const ruleText = (kind, p) => {
   if (kind === "pin_lesson") return t("rule_desc_pin", { klass: className(p.class_id), subject: subjectName(p.subject_id), day: dayName(p.day), period: p.period });
   return kind;
 };
+
+// ---------- teacher autocomplete: type any part of a name (any case) -> pick -> you get the teacher's id ----------
+const fold = (s) => String(s).toLowerCase().replace(/[ً-ْٰـ]/g, "")
+  .replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
+export function teacherMatches(q) {
+  const f = fold(q).trim();
+  return state.teachers.filter((x) => !f || fold(x.name).includes(f));
+}
+let acSeq = 0;
+// host: an element to fill. Returns { id() -> number|null, set(id), clear() }.
+export function teacherPicker(host, { label, id = null, placeholder = "", onPick = () => {} } = {}) {
+  const uid = `ac${++acSeq}`;
+  host.innerHTML = `<div class="field"><label for="${uid}">${esc(label ?? t("pick_teacher"))}</label>
+    <div class="ac"><input id="${uid}" type="text" dir="auto" autocomplete="off" role="combobox" aria-expanded="false"
+      aria-controls="${uid}-l" aria-autocomplete="list" placeholder="${esc(placeholder || t("ac_ph"))}">
+      <ul class="ac-list" id="${uid}-l" role="listbox" hidden></ul></div></div>`;
+  const input = host.querySelector("input"), list = host.querySelector("ul");
+  let picked = null, shown = [], active = -1;
+  const close = () => { list.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; };
+  const choose = (x) => { picked = x.id; input.value = x.name; close(); onPick(x.id); };
+  const mark = () => list.querySelectorAll("li").forEach((li, i) => li.classList.toggle("on", i === active));
+  function open() {
+    shown = teacherMatches(input.value).slice(0, 30);
+    list.innerHTML = shown.length ? shown.map((x, i) => `<li role="option" data-i="${i}"><bdi>${esc(x.name)}</bdi><small>${esc(subjectName(x.subject_id))}</small></li>`).join("")
+      : `<li class="none" role="presentation">${esc(t("ac_none"))}</li>`;
+    list.hidden = false; input.setAttribute("aria-expanded", "true"); active = -1;
+  }
+  input.addEventListener("input", () => { picked = null; onPick(null); open(); });
+  input.addEventListener("focus", open);
+  input.addEventListener("blur", () => setTimeout(close, 120));
+  list.addEventListener("pointerdown", (e) => {
+    const li = e.target.closest("li[data-i]"); if (!li) return;
+    e.preventDefault(); choose(shown[Number(li.dataset.i)]);
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault(); if (list.hidden) open();
+      if (shown.length) { active = (active + (e.key === "ArrowDown" ? 1 : -1) + shown.length) % shown.length; mark(); list.children[active]?.scrollIntoView({ block: "nearest" }); }
+    } else if (e.key === "Enter" && !list.hidden && shown.length && active >= 0) { e.preventDefault(); choose(shown[active]); }
+    else if (e.key === "Enter" && !list.hidden && shown.length === 1) { e.preventDefault(); choose(shown[0]); }
+    else if (e.key === "Escape") close();
+  });
+  const api_ = {
+    id: () => picked,
+    set(tid) { const x = byId(state.teachers, tid); picked = x ? x.id : null; input.value = x ? x.name : ""; close(); },
+    clear() { picked = null; input.value = ""; close(); },
+    focus: () => input.focus(),
+  };
+  if (id != null) api_.set(id);
+  return api_;
+}

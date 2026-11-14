@@ -1,7 +1,7 @@
 // Rules & data: data check, Excel import, classes, subject hours, teachers, add a teacher, rules, Regenerate.
 import { $, $$, t, esc, iso, api, ApiFail, missingRoute, state, loadBase, allLessons, generate, setStale, isStale,
   subjectName, subjectChip, className, teacherName, dayName, DAYS, PERIODS, options, msg, toast, busy,
-  confirmBox, heading, ruleText, ICON, lang, markGenerated, warnList } from "../core.js";
+  confirmBox, heading, ruleText, ICON, lang, markGenerated, warnList, teacherPicker } from "../core.js";
 import { openWeek } from "./timetable.js";
 
 const ui = { search: "", page: 0, kind: "subject_not_in_period", parsed: null, imported: null };
@@ -239,7 +239,7 @@ function ruleFields(kind) {
   const subject = `<label class="field">${esc(t("f_subject"))}<select data-p="subject_id">${options(state.subjects, null, (s) => subjectName(s.id))}</select></label>`;
   if (kind === "subject_not_in_period") return subject + period;
   if (kind === "teacher_unavailable")
-    return `<label class="field">${esc(t("f_teacher"))}<select data-p="teacher_id">${options(state.teachers, null, (x) => `${iso(x.name)} · ${subjectName(x.subject_id)}`)}</select></label>` + day + period;
+    return `<div id="r-teacher"></div><input type="hidden" data-p="teacher_id" value="">` + day + period;
   return `<label class="field">${esc(t("f_class"))}<select data-p="class_id">${options(state.classes, null)}</select></label>` + subject + day + period;
 }
 function rulesPanel() {
@@ -299,16 +299,24 @@ function wireRules() {
   };
   // build it yourself
   const readParams = () => Object.fromEntries($$("[data-p]").map((s) => [s.dataset.p, Number(s.value)]));
-  const preview = () => { $("#r-preview").innerHTML = msg("ok", esc(ruleText(ui.kind, readParams()))); };
+  const preview = () => {
+    const bad = ui.kind === "teacher_unavailable" && !$('[data-p="teacher_id"]').value;
+    $("#r-preview").innerHTML = bad ? msg("warn", esc(t("ac_pick_first"))) : msg("ok", esc(ruleText(ui.kind, readParams())));
+  };
+  const mount = () => {
+    const host = $("#r-teacher"), hid = $('[data-p="teacher_id"]');
+    if (host) teacherPicker(host, { label: t("f_teacher"), onPick: (id) => { hid.value = id ?? ""; preview(); } });
+  };
   $$("[data-p]").forEach((s) => (s.onchange = preview));
-  preview();
+  mount(); preview();
   $$("[data-kind]").forEach((b) => (b.onclick = () => {
     ui.kind = b.dataset.kind;
     $$("[data-kind]").forEach((x) => x.classList.toggle("on", x === b));
     $("#r-fields").innerHTML = ruleFields(ui.kind);
-    $$("[data-p]").forEach((s) => (s.onchange = preview)); preview();
+    $$("[data-p]").forEach((s) => (s.onchange = preview)); mount(); preview();
   }));
   $("#r-save").onclick = (e) => busy(e.currentTarget, async () => {
+    if (ui.kind === "teacher_unavailable" && !$('[data-p="teacher_id"]').value) throw new Error(t("ac_pick_first"));
     await api("/rules", { method: "POST", body: { kind: ui.kind, params: readParams(), source_text: $("#r-note").value } });
     await savedRule();
   });

@@ -306,3 +306,31 @@ details.manual .btn { margin-top: 12px; }
   .bar-row { grid-template-columns: minmax(0, 1fr) 2.2em 4.2em; }
   .bar-row .bar { display: none; }
 }
+
+/* teacher autocomplete */
+.ac { position: relative; }
+.ac input { width: 100%; box-sizing: border-box; }
+.ac-list { position: absolute; z-index: 15; inset-inline: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none;
+  max-height: 240px; overflow-y: auto; background: var(--panel, #fff); color: var(--ink); border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(11,27,77,.25), inset 0 0 0 1px rgba(11,27,77,.12); }
+.ac-list[hidden] { display: none; }
+.ac-list li { display: flex; justify-content: space-between; gap: 10px; padding: .65em .8em; border-radius: 10px; cursor: pointer; font-size: 1rem; }
+.ac-list li small { color: var(--soft); white-space: nowrap; }
+.ac-list li.on, .ac-list li:hover { background: rgba(60,90,200,.14); }
+.ac-list li.none { cursor: default; color: var(--soft); }
+.saved { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.saved li { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.saved li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+#chat-teacher { margin-top: 12px; }
+
+/* phone (390px) */
+@media (max-width: 480px) {
+  .row, .row.controls { flex-wrap: wrap; }
+  .row > .field, .row > .grow, .row > #who, #who .field { flex: 1 1 100%; min-width: 0; }
+  label.field input, label.field select, .ac input, .composer input, select { font-size: 16px; min-height: 44px; }
+  .btn, .ac-list li, .chip { min-height: 44px; }
+  .composer { flex-direction: column; } .composer .btn { width: 100%; }
+  .bubble { max-width: 100%; }
+  .grid-box, .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .panel { padding-inline: 14px; }
+}
