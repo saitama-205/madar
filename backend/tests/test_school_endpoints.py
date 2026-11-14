@@ -80,26 +80,75 @@ def test_timetable_unknown_or_bad_id(api):
 
 
 # ---------- POST /api/classes ----------
+# A new class has no teachers yet, so the automatic regeneration fails with "missing_teachers". The class must be
+# kept anyway (the error message says so) and the old timetable must stay.
 
 def test_adding_a_class_to_a_full_grade_gets_section_5_then_6(api):
     first = api.post("/api/classes", json={"grade": 3})
-    assert first.status_code == 201
-    assert first.json()["name"] == "5/3" and first.json()["grade"] == 3
-    assert api.post("/api/classes", json={"grade": 3}).json()["name"] == "6/3"
+    assert first.status_code == 422 and first.json()["error"] == "missing_teachers"
+    assert "5/3" in first.json()["message"] and "was added" in first.json()["message"]
+    assert api.post("/api/classes", json={"grade": 3}).status_code == 422
     assert one(api.db, "SELECT COUNT(*) FROM classes") == 22
     names = [c["name"] for c in api.get("/api/classes").json() if c["grade"] == 3]
-    assert names == ["1/3", "2/3", "3/3", "4/3", "5/3", "6/3"]  # still sorted by section number
+    assert names == ["1/3", "2/3", "3/3", "4/3", "5/3", "6/3"]  # both kept, sorted by section number
 
 
 def test_new_class_gets_the_next_free_section(api):
     api.db.execute("DELETE FROM classes WHERE name = '3/2'")  # free up section 3 of grade 2
     api.db.commit()
     r = api.post("/api/classes", json={"grade": 2})
+    assert r.status_code == 422 and "Class 3/2 was added" in r.json()["message"]
+    created = next(c for c in api.get("/api/classes").json() if c["name"] == "3/2")
+    assert created["grade"] == 2 and isinstance(created["id"], int)
+    assert teacher_of(api.db, created["id"], 1) == []  # new class starts with no teachers
+
+
+def test_failed_generation_keeps_class_and_old_timetable(api):
+    assert api.post("/api/timetable/generate").status_code == 200
+    before = one(api.db, "SELECT COUNT(*) FROM lessons")
+    r = api.post("/api/classes", json={"grade": 1})
+    assert r.status_code == 422 and set(r.json()) == {"error", "message"}
+    assert r.json()["error"] == "missing_teachers" and "previous timetable was kept" in r.json()["message"]
+    assert one(api.db, "SELECT COUNT(*) FROM classes WHERE name = '5/1'") == 1
+    assert one(api.db, "SELECT COUNT(*) FROM lessons") == before
+
+
+def test_unexpected_solver_crash_still_keeps_the_class(api, monkeypatch):
+    import routes_school
+
+    def boom(db):
+        raise RuntimeError("solver exploded")
+
+    monkeypatch.setattr(routes_school, "generate_timetable", boom)
+    r = api.post("/api/classes", json={"grade": 4})
+    assert r.status_code == 500 and r.json()["error"] == "generation_failed" and "4" in r.json()["message"]
+    assert one(api.db, "SELECT COUNT(*) FROM classes WHERE name = '5/4'") == 1
+
+
+def test_busy_generation_is_an_error_but_class_is_kept(api):
+    import solver
+    assert solver._busy.acquire(blocking=False)
+    try:
+        r = api.post("/api/classes", json={"grade": 5})
+    finally:
+        solver._busy.release()
+    assert r.status_code == 409 and r.json()["error"] == "busy"
+    assert one(api.db, "SELECT COUNT(*) FROM classes WHERE name = '5/5'") == 1
+
+
+def test_successful_generation_returns_class_and_result(api, monkeypatch):
+    import routes_school
+    assert api.post("/api/timetable/generate").status_code == 200
+    monkeypatch.setattr(routes_school, "generate_timetable",
+                        lambda db: {"ok": True, "lessons_count": 700, "seconds": 1.5})  # pretend the solver succeeded
+    r = api.post("/api/classes", json={"grade": 2})
     assert r.status_code == 201
     body = r.json()
-    assert body["name"] == "3/2" and body["grade"] == 2 and isinstance(body["id"], int)
-    assert any(c["name"] == "3/2" for c in api.get("/api/classes").json())
-    assert teacher_of(api.db, body["id"], 1) == []  # new class starts with no teachers
+    assert (body["name"], body["grade"]) == ("5/2", 2) and isinstance(body["id"], int)
+    gen = body["generation"]
+    assert gen["ok"] is True and gen["classes"] == 20 and gen["lessons_count"] == 700 and gen["seconds"] == 1.5
+    # the new class has no lessons in this fake run, and the python re-check reports that instead of hiding it
+    assert gen["violations"] and any("5/2" in v for v in gen["violations"])
 
 
 def test_bad_grade_is_rejected(api):
