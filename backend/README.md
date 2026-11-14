@@ -17,7 +17,11 @@ uvicorn main:app --reload             # start; --reload restarts when you save a
 Open http://localhost:8000 (the frontend) or http://localhost:8000/docs (auto-generated API page where you can try every endpoint).
 Next times you only need `activate` and the `uvicorn` line. macOS/Linux: `source .venv/bin/activate`.
 
-On the first start the app creates `database/madar.db` and fills it with the school's data. Delete that file to start fresh.
+On the first start the app creates `database/madar.db` and fills it with the school's data. After that it is **never re-seeded**, so your changes survive restarts.
+
+To start over with the original school data (this deletes everything you added, the timetable and rules included):
+- `POST /api/reset` (try it on the `/docs` page), or
+- `python database/seed.py --reset` from the repo root, with the server stopped.
 
 ## Tests
 

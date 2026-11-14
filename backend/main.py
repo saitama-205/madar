@@ -14,7 +14,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from database.seed import seed_if_empty  # noqa: E402
+from database.db import get_connection  # noqa: E402
+from database.seed import seed, seed_if_empty  # noqa: E402
 
 FRONTEND_DIR = ROOT / "frontend"
 
@@ -62,6 +63,16 @@ def create_app(frontend_dir: Path = FRONTEND_DIR) -> FastAPI:
 
     @app.get("/api/health")
     def health():
+        return {"ok": True}
+
+    @app.post("/api/reset")
+    def reset():
+        """Wipe every table and reload the original school data. Everything added since is lost."""
+        conn = get_connection()
+        try:
+            seed(conn, reset=True)  # one transaction: if loading fails, nothing is wiped
+        finally:
+            conn.close()
         return {"ok": True}
 
     # Added in later steps: subjects, classes, teachers, timetable, generate, rules.
