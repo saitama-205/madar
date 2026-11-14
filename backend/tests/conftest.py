@@ -7,6 +7,13 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 
+@pytest.fixture(autouse=True)
+def no_background_generation(monkeypatch):
+    """Starting the app must not launch the startup solver thread in tests: it would keep the global "one
+    generation at a time" lock busy and make unrelated tests fail with 409 busy. The startup test turns it on itself."""
+    monkeypatch.setenv("MADAR_AUTO_GENERATE", "0")
+
+
 @pytest.fixture()
 def conn(tmp_path, monkeypatch):
     """An empty database in a temp folder (never touches database/madar.db)."""
