@@ -10,6 +10,7 @@ Madar is an AI-assisted school timetable app for an elementary school in Kuwait
 
 - A **constraint solver (Google OR-Tools)** builds the timetable, so every rule is guaranteed.
 - The **AI only translates** a typed request ("PE never in period 7") into a rule the solver understands.
+- **Code computes the numbers, the AI only explains them.** The AI never calculates, schedules or changes data: it either translates a typed request into a rule preview, or explains metrics that Python already computed.
 - The user always sees a preview before anything changes.
 
 ### Demo goal (must work by the end)
@@ -73,6 +74,8 @@ The database owner (saitama-205) provides `database/schema.sql`, `database/seed.
 | GET | `/api/timetable?class_id=ID` | – | `{ "lessons": [Lesson] }` for one class |
 | GET | `/api/timetable?teacher_id=ID` | – | `{ "lessons": [Lesson] }` for one teacher |
 | POST | `/api/timetable/generate` | – | `{ "ok": true, "lessons_count": 700, "seconds": 8.2 }` or an error explaining what's missing |
+| GET | `/api/analytics` | – | Metrics about the saved timetable, all **computed in Python** (see "Analytics details"). `409` `no_timetable` if nothing has been generated yet |
+| POST | `/api/analytics/insights` | `{ "language": "en" }` (`"en"` or `"ar"`, default `"en"`) | `{ "summary": "short paragraph", "recommendations": ["sentence", ..] }`. The backend computes the same metrics as `GET /api/analytics`, sends **only those metrics** to the AI (OpenRouter), and returns its explanation in the chosen language. `503` `ai_unavailable` if the AI key is missing or the AI is down |
 | GET | `/api/rules` | – | `[{ "id", "kind", "params", "source_text" }]` |
 | POST | `/api/rules` | `{ "kind", "params", "source_text" }` | the saved rule |
 | DELETE | `/api/rules/{id}` | – | `{ "ok": true }` |
@@ -87,6 +90,23 @@ The database owner (saitama-205) provides `database/schema.sql`, `database/seed.
 ```json
 { "class_id": 1, "class": "1/1", "teacher_id": 4, "teacher": "Name", "subject_id": 2, "subject": "Math", "day": 0, "period": 1 }
 ```
+
+**Analytics details** (`GET /api/analytics` response; days are Sunday to Thursday = 5 numbers, periods 1 to 7 = 7 numbers):
+```json
+{
+  "teacher_load": [{ "teacher_id": 4, "teacher": "Name", "subject": "Math", "per_week": 16, "per_day": [4, 3, 3, 3, 3] }],
+  "teacher_gaps": [{ "teacher_id": 4, "teacher": "Name", "day": 0, "gap_periods": 2 }],
+  "hard_subjects_by_period": { "Arabic": [..7..], "English": [..7..], "Math": [..7..], "Science": [..7..] },
+  "class_load": [{ "class_id": 1, "class": "1/1", "per_day": [7, 7, 7, 7, 7] }],
+  "rule_check": { "ok": true, "violations": ["human sentence", ..] }
+}
+```
+- `teacher_load`: lessons per teacher per week and per day.
+- `teacher_gaps`: free periods **between** a teacher's first and last lesson on a day (only days with a gap are listed).
+- `hard_subjects_by_period`: how many lessons of each hard subject (Arabic, English, Math, Science) fall in each period, across the whole school.
+- `class_load`: lessons per class per day (7 per day when the timetable is complete).
+- `rule_check`: Python re-checks the hard rules below against the saved lessons. `ok` is `false` and `violations` is filled if any rule is broken.
+- **The AI rule:** for `/api/analytics/insights` the AI receives only these metrics. Every number in its answer must come from them: the AI explains and suggests, it never calculates, and its recommendations are text only (nothing is changed automatically). The key is `OPENROUTER_API_KEY` in `.env` (and Render's environment), never in the code or on GitHub.
 
 **Import (.xlsx) details:**
 - Template sheets and columns: **Classes** `Class` (e.g. `1/1`) · **Subjects and hours** `Subject`, `Arabic name`, `Grade 1` … `Grade 5` (lessons per week) · **Teachers** `Teacher`, `Subject`, `Classes` (comma-separated, e.g. `1/1, 2/1`).
