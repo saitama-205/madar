@@ -55,7 +55,7 @@ Madar is an AI-assisted school timetable app for an elementary school in Kuwait
 
 Rule kinds: `subject_not_in_period` `{subject_id, period}` · `teacher_unavailable` `{teacher_id, day, period}` · `pin_lesson` `{class_id, subject_id, day, period}`
 
-The database teammate provides `database/schema.sql`, `database/seed.py` (fills real school data) and
+The database owner (saitama-205) provides `database/schema.sql`, `database/seed.py` (fills real school data) and
 `database/db.py` with a `get_connection()` function the backend imports.
 
 ## API endpoints
